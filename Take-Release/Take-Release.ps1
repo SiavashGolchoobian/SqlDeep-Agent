@@ -22,13 +22,17 @@ foreach ($myFile in $myFileList.Keys) {
     #Auto fill object attributes
     $myFileList[$myFile].ItemName=$myFile
     $myFileList[$myFile].FilePath+=$myFile
-    #Sign files
+    
+    #Sign file
     if ($myFile.EndsWith('.ps1') -or $myFile.EndsWith('.psm1')) {
         Set-AuthenticodeSignature -FilePath ($myFileList[$myFile].FilePath) -Certificate $myCertificate -IncludeChain All -TimeStampServer http://timestamp.digicert.com
     }
-    #Copy files to linux server
     
-    #Upload files
+    #Copy file to docker host
+    
+    #Copy file to docker containers
+
+    #Upload file to sqldeep databases
     [string]$Query="
         DECLARE @ItemName NVARCHAR(255)=N'"+$myFile+"'
         DECLARE @ItemType NVARCHAR(50)=N'"+$myFileList[$myFile].ItemType+"'
@@ -55,3 +59,7 @@ foreach ($myFile in $myFileList.Keys) {
     "
     Invoke-Sqlcmd -ConnectionString $ConnectionString -Query $Query
 }
+
+    #Create dac pac files
+
+    #Upload dac pack files
