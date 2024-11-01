@@ -1,0 +1,40 @@
+#!/bin/sh
+rm /var/opt/mssql/2017/backup/sqldeep/*
+rm /var/opt/mssql/2019/backup/sqldeep/*
+rm /var/opt/mssql/2022/backup/sqldeep/*
+cp /home/siavash/sqldeep/SqlDeepBackupFileCleaner.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupFileCleaner.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupFileCleaner.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepSync.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepSync.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepSync.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/HelloWorld.ps1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/HelloWorld.ps1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/HelloWorld.ps1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepLogWriter.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepLogWriter.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepLogWriter.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepOsUserAudit.ps1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepOsUserAudit.ps1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepOsUserAudit.ps1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepCommon.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepCommon.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepCommon.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepAudit.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepAudit.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepAudit.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupShipping.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupShipping.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupShipping.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepDatabaseShipping.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepDatabaseShipping.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepDatabaseShipping.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupTest.psm1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupTest.psm1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepBackupTest.psm1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepFileEncryption.ps1 /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepFileEncryption.ps1 /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepFileEncryption.ps1 /var/opt/mssql/2022/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepTemplate_ScriptRepositoryJob.sql /var/opt/mssql/2017/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepTemplate_ScriptRepositoryJob.sql /var/opt/mssql/2019/backup/sqldeep
+cp /home/siavash/sqldeep/SqlDeepTemplate_ScriptRepositoryJob.sql /var/opt/mssql/2022/backup/sqldeep
