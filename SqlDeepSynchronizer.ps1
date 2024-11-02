@@ -63,7 +63,7 @@ function DownloadSqlDeepRepositoryItems(){
         [WebRepositoryItem[]]$myWebRepositoryCollection=$null;
         [WebRepositoryItem]$myWebRepositoryItem=$null;
         #===============Constants
-        $mySqlDeepOfficialCatalogURI='https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-Synchronizer/refs/heads/main/SqlDeepCatalog.json'
+        $mySqlDeepOfficialCatalogURI='https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/SqlDeepCatalog.json'
         if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
         $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,'SqlDeepCatalog.json')
         $myWebRepositoryCollection+=($myWebRepositoryItem)
@@ -82,7 +82,7 @@ function DownloadSqlDeepRepositoryItems(){
         $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
         #Validate all files are downloaded and validate their signatures
         foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
-            if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -eq 'HashMismatch') {
+            if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -notin ('Valid','UnknownError')) {
                 Write-Host ('Signature is mismatched for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
                 $myWebRepositoryItem.IsValid=$false
                 Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
