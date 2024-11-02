@@ -1,11 +1,3 @@
-<#-----Parameters
-Download
-    SqlDeepDB
-    PowershellTools
-Deploy
-    SqlDeepDB
-    PowershellTools
-#>
 [string]$LocalRepositoryPath='E:\Log\SqlDeep'
 
 enum SqlDeepRepositoryItemCategory {
@@ -19,6 +11,7 @@ Class WebRepositoryItem {
     [string]$FileURI
     [string]$LocalFileName
     [string]$LocalFolderPath
+    [bool]$IsValid
    
     WebRepositoryItem([SqlDeepRepositoryItemCategory]$Category,[string]$FileURI,[string]$LocalFolderPath,[string]$LocalFileName){
         Write-Verbose 'WebRepositoryItem object initializing started'
@@ -26,7 +19,11 @@ Class WebRepositoryItem {
         $this.FileURI=$FileURI
         $this.LocalFolderPath=$LocalFolderPath
         $this.LocalFileName=$LocalFileName
+        $this.IsValid=$true
         Write-Verbose 'WebRepositoryItem object initialized'
+    }
+    [string] FilePath(){
+        return $this.LocalFolderPath+'\'+$this.LocalFileName
     }
 }
 
@@ -67,14 +64,23 @@ function DownloadFile {
 $mySqlDeepOfficialCatalogURI='https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-Synchronizer/refs/heads/main/SqlDeepCatalog.json'
 $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,'SqlDeepCatalog.json')
 $myWebRepositoryCollection+=($myWebRepositoryItem)
+#===============Main Body
 #Download Catalog file(s)
 $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
 #Fill RepositoryCollection via Catalog file(s)
 foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog)) {
-    $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.LocalFolderPath+'\'+$myWebRepositoryItem.LocalFileName) | ConvertFrom-Json
+    $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.FilePath()) | ConvertFrom-Json
     $myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name)))}
     $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name)))}
     $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name)))}
 }
 #Download non-catalog type Repository Contents
 $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
+#Validate all files are downloaded and validate their signatures
+foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
+    if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -eq 'HashMismatch') {
+        Write-Host ('Signature is mismatched for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
+        $myWebRepositoryItem.IsValid=$false
+        Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
+    } 
+}
