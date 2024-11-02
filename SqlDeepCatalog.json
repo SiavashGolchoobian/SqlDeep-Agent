@@ -7,49 +7,49 @@
       "SqlDeepDatabase": [
         {
           "name": "SqlDeepDatabase",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
         }
       ],
       "SqlDeepPowershellTools": [
         {
           "name": "SqlDeepAudit.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepAudit.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepAudit.psm1"
         },
         {
           "name": "SqlDeepBackupFileCleaner.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepBackupFileCleaner.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepBackupFileCleaner.psm1"
         },
         {
           "name": "SqlDeepBackupShipping.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepBackupShipping.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepBackupShipping.psm1"
         },
         {
           "name": "SqlDeepBackupTest.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepBackupTest.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepBackupTest.psm1"
         },
         {
           "name": "SqlDeepCommon.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepCommon.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepCommon.psm1"
         },
         {
           "name": "SqlDeepDatabaseShipping.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepDatabaseShipping.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepDatabaseShipping.psm1"
         },
         {
           "name": "SqlDeepFileEncryption.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepFileEncryption.ps1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepFileEncryption.ps1"
         },
         {
           "name": "SqlDeepLogWriter.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepLogWriter.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepLogWriter.psm1"
         },
         {
           "name": "SqlDeepRestoreBackupRepository.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepRestoreBackupRepository.ps1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepRestoreBackupRepository.ps1"
         },
         {
           "name": "SqlDeepSync.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepSync.psm1"
+          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-PowershellTools/refs/heads/main/SqlDeepSync.psm1"
         }
       ]
     }
