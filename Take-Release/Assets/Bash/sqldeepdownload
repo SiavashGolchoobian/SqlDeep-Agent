@@ -1,4 +1,7 @@
 #!/bin/sh
+rm /home/siavash/sqldeep/SqlDeep2017.bak
+rm /home/siavash/sqldeep/SqlDeep2019.bak
+rm /home/siavash/sqldeep/SqlDeep2022.bak
 sudo chown -R siavash /var/opt/mssql/2017/backup/sqldeep/SqlDeep2017.bak
 sudo chown -R siavash /var/opt/mssql/2019/backup/sqldeep/SqlDeep2019.bak
 sudo chown -R siavash /var/opt/mssql/2022/backup/sqldeep/SqlDeep2022.bak

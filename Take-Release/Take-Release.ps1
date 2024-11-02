@@ -40,7 +40,9 @@ foreach ($myFile in $myFileList.Keys) {
 Write-Host 'Sign file(s)'
 foreach ($myFile in $myFileList.Keys) {
     if ($myFile.EndsWith('.ps1') -or $myFile.EndsWith('.psm1')) {
-        Set-AuthenticodeSignature -FilePath ($myFileList[$myFile].FilePath) -Certificate $myCertificate -IncludeChain All -TimeStampServer http://timestamp.digicert.com
+        if ((Get-AuthenticodeSignature -FilePath $myFileList[$myFile].FilePath).Status -eq 'HashMismatch'){
+            Set-AuthenticodeSignature -FilePath ($myFileList[$myFile].FilePath) -Certificate $myCertificate -IncludeChain All -TimeStampServer http://timestamp.digicert.com
+        }
     }
 }
 
@@ -117,7 +119,7 @@ Publish-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2022 -DacpacF
 
 #-----Upload file(s) to sqldeep refrence(s) databases
 Write-Host 'Backup sqldeep database'
-[string]$myQuery="USE [master]; BACKUP DATABASE [SqlDeep] TO DISK=N'/var/opt/mssql/backup/sqldeep/SqlDeep{version}.bak'"
+[string]$myQuery="USE [master]; BACKUP DATABASE [SqlDeep] TO DISK=N'/var/opt/mssql/backup/sqldeep/SqlDeep{version}.bak' WITH NOFORMAT, INIT,  NAME = N'SqlDeep-Full Database Backup', SKIP, NOREWIND, NOUNLOAD, COMPRESSION, CHECKSUM"
 Invoke-Sqlcmd -ConnectionString $SqlDeepDbConnectionString2017 -Query ($myQuery.Replace('{version}','2017'))
 Invoke-Sqlcmd -ConnectionString $SqlDeepDbConnectionString2019 -Query ($myQuery.Replace('{version}','2019'))
 Invoke-Sqlcmd -ConnectionString $SqlDeepDbConnectionString2022 -Query ($myQuery.Replace('{version}','2022'))
@@ -126,6 +128,9 @@ Invoke-Sqlcmd -ConnectionString $SqlDeepDbConnectionString2022 -Query ($myQuery.
 Write-Host 'Generate download bash script file'
 [string]$myBashCommand=''
 $myBashCommand+='#!/bin/sh'+"`n"
+$myBashCommand+='rm ' + $SqlDeepDbDockerHostHomePath + 'SqlDeep2017.bak' +"`n"
+$myBashCommand+='rm ' + $SqlDeepDbDockerHostHomePath + 'SqlDeep2019.bak' +"`n"
+$myBashCommand+='rm ' + $SqlDeepDbDockerHostHomePath + 'SqlDeep2022.bak' +"`n"
 $myBashCommand+='sudo chown -R siavash ' + $SqlDeepDbDockerContainerPath2017 + '/SqlDeep2017.bak' +"`n"
 $myBashCommand+='sudo chown -R siavash ' + $SqlDeepDbDockerContainerPath2019 + '/SqlDeep2019.bak' +"`n"
 $myBashCommand+='sudo chown -R siavash ' + $SqlDeepDbDockerContainerPath2022 + '/SqlDeep2022.bak' +"`n"
