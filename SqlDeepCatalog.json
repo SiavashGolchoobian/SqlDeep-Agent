@@ -7,7 +7,7 @@
       "SqlDeepDatabase": [
         {
           "name": "SqlDeepDatabase",
-          "uri": "https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
         }
       ],
       "SqlDeepPowershellTools": [
