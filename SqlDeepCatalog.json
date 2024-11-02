@@ -1,0 +1,57 @@
+{
+  "product": "SqlDeep Catalog",
+  "version": 1,
+  "releaseDate": "2024-11-02T00:00:00.000Z",
+  "library": [
+    {
+      "SqlDeepDatabase": [
+        {
+          "name": "SqlDeepDatabase",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
+        }
+      ],
+      "SqlDeepPowershellTools": [
+        {
+          "name": "SqlDeepAudit.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepAudit.psm1"
+        },
+        {
+          "name": "SqlDeepBackupFileCleaner.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepBackupFileCleaner.psm1"
+        },
+        {
+          "name": "SqlDeepBackupShipping.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepBackupShipping.psm1"
+        },
+        {
+          "name": "SqlDeepBackupTest.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepBackupTest.psm1"
+        },
+        {
+          "name": "SqlDeepCommon.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepCommon.psm1"
+        },
+        {
+          "name": "SqlDeepDatabaseShipping.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepDatabaseShipping.psm1"
+        },
+        {
+          "name": "SqlDeepFileEncryption.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepFileEncryption.ps1"
+        },
+        {
+          "name": "SqlDeepLogWriter.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepLogWriter.psm1"
+        },
+        {
+          "name": "SqlDeepRestoreBackupRepository.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepRestoreBackupRepository.ps1"
+        },
+        {
+          "name": "SqlDeepSync.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/blob/main/SqlDeepSync.psm1"
+        }
+      ]
+    }
+  ]
+}
