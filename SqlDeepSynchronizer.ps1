@@ -1,5 +1,3 @@
-[string]$LocalRepositoryPath='E:\Log\SqlDeep'
-
 enum SqlDeepRepositoryItemCategory {
     SqlDeepCatalog
     SqlDeepDatabase
@@ -26,7 +24,6 @@ Class WebRepositoryItem {
         return $this.LocalFolderPath+'\'+$this.LocalFileName
     }
 }
-
 function DownloadFile {
     [OutputType([bool])]
     param (
@@ -56,31 +53,43 @@ function DownloadFile {
     }
     end{}
 }
-#===============Parameters
-[string]$mySqlDeepOfficialCatalogURI=$null;
-[WebRepositoryItem[]]$myWebRepositoryCollection=$null;
-[WebRepositoryItem]$myWebRepositoryItem=$null;
-#===============Constants
-$mySqlDeepOfficialCatalogURI='https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-Synchronizer/refs/heads/main/SqlDeepCatalog.json'
-$myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,'SqlDeepCatalog.json')
-$myWebRepositoryCollection+=($myWebRepositoryItem)
-#===============Main Body
-#Download Catalog file(s)
-$myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
-#Fill RepositoryCollection via Catalog file(s)
-foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog)) {
-    $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.FilePath()) | ConvertFrom-Json
-    $myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name)))}
-    $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name)))}
-    $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name)))}
+function DownloadSqlDeepRepositoryItems(){
+    param (
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="URI address to download")][string]$LocalRepositoryPath
+    )
+    begin{
+        #===============Parameters
+        [string]$mySqlDeepOfficialCatalogURI=$null;
+        [WebRepositoryItem[]]$myWebRepositoryCollection=$null;
+        [WebRepositoryItem]$myWebRepositoryItem=$null;
+        #===============Constants
+        $mySqlDeepOfficialCatalogURI='https://raw.githubusercontent.com/SiavashGolchoobian/SqlDeep-Synchronizer/refs/heads/main/SqlDeepCatalog.json'
+        if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
+        $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,'SqlDeepCatalog.json')
+        $myWebRepositoryCollection+=($myWebRepositoryItem)
+    }
+    process{
+        #Download Catalog file(s)
+        $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
+        #Fill RepositoryCollection via Catalog file(s)
+        foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog)) {
+            $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.FilePath()) | ConvertFrom-Json
+            $myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name)))}
+            $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name)))}
+            $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name)))}
+        }
+        #Download non-catalog type Repository Contents
+        $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
+        #Validate all files are downloaded and validate their signatures
+        foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
+            if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -eq 'HashMismatch') {
+                Write-Host ('Signature is mismatched for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
+                $myWebRepositoryItem.IsValid=$false
+                Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
+            } 
+        }
+    }
+    end{}
 }
-#Download non-catalog type Repository Contents
-$myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
-#Validate all files are downloaded and validate their signatures
-foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
-    if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -eq 'HashMismatch') {
-        Write-Host ('Signature is mismatched for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
-        $myWebRepositoryItem.IsValid=$false
-        Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
-    } 
-}
+
+DownloadSqlDeepRepositoryItems -LocalRepositoryPath 'E:\log\SqlDeep'
