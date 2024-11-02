@@ -6,7 +6,7 @@
     {
       "SqlDeepDatabase": [
         {
-          "name": "SqlDeepDatabase",
+          "name": "SqlDeepDatabase.dacpac",
           "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
         }
       ],
