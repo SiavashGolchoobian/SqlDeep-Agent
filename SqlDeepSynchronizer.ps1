@@ -76,4 +76,5 @@ foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Pro
     $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name)))}
     $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name)))}
 }
-#Download Repository Contents
+#Download non-catalog type Repository Contents
+$myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
