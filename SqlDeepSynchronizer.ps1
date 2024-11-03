@@ -249,6 +249,7 @@ function Publish-DatabaseRepositoryScripts(){
     param (
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")][ValidateNotNullOrEmpty()][RepositoryItem[]]$SqlDeepRepositoryItems
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file")][ValidateNotNullOrEmpty()][string]$SqlDeepRepositoryItemsFilePath
     )
     begin{
         [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@()
