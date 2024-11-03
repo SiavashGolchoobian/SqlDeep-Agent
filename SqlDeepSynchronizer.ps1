@@ -41,7 +41,8 @@ function DownloadFile {
     process{
         try {
             if((Test-Path -Path $FolderPath) -eq $true) {
-                Invoke-WebRequest -Uri $URI -OutFile ($FolderPath+'\'+$FileName)
+                #Invoke-WebRequest -Uri $URI -OutFile ($FolderPath+'\'+$FileName)
+                Start-BitsTransfer -Source $URI -Destination ($FolderPath+'\'+$FileName) -TransferType Download
                 $myAnswer=(Test-Path -Path ($FolderPath+'\'+$FileName))
             }else{
                 $myAnswer=$false
@@ -85,7 +86,7 @@ function DownloadSqlDeepRepositoryItems(){
             if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -notin ('Valid','UnknownError')) {
                 Write-Host ('Signature is mismatched for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
                 $myWebRepositoryItem.IsValid=$false
-                Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
+                #Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
             } 
         }
     }
