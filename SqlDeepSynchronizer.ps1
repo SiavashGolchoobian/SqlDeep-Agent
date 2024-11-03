@@ -60,18 +60,26 @@ function DownloadSqlDeepRepositoryItems(){
     begin{
         #===============Parameters
         [string]$mySqlDeepOfficialCatalogURI=$null;
+        [string]$mySqlDeepOfficialCatalogFilename=$null;
+        [string]$myLocalRepositoryArchivePath=$null;
         [WebRepositoryItem[]]$myWebRepositoryCollection=$null;
         [WebRepositoryItem]$myWebRepositoryItem=$null;
         #===============Constants
         $mySqlDeepOfficialCatalogURI='https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/SqlDeepCatalog.json'
         $myInstalledCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
+        $mySqlDeepOfficialCatalogFilename=$mySqlDeepOfficialCatalogURI.Split('/')[-1]
         if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
-        $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,'SqlDeepCatalog.json')
+        $myLocalRepositoryArchivePath=$LocalRepositoryPath+'\Archive\'+(Get-Date -Format "yyyyMMdd_HHmmss").ToString()
+        if((Test-Path -Path $myLocalRepositoryArchivePath) -eq $false) {New-Item -ItemType Directory -Path $myLocalRepositoryArchivePath -Force}
+        $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,$mySqlDeepOfficialCatalogFilename)
         $myWebRepositoryCollection+=($myWebRepositoryItem)
     }
     process{
         #Download Catalog file(s)
-        $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
+        $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{
+            Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
+            DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
+        }
         #Fill RepositoryCollection via Catalog file(s)
         foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog)) {
             $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.FilePath()) | ConvertFrom-Json
@@ -80,7 +88,10 @@ function DownloadSqlDeepRepositoryItems(){
             $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name)))}
         }
         #Download non-catalog type Repository Contents
-        $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
+        $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{
+            Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
+            DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
+        }
         #Validate all files are downloaded and validate their signatures
         foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
             $mySignerCertificate=Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())
@@ -91,7 +102,10 @@ function DownloadSqlDeepRepositoryItems(){
             } 
         }
     }
-    end{}
+    end{
+        Move-Item -Path ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Destination $myLocalRepositoryArchivePath -Force 
+        $myWebRepositoryCollection | Where-Object {$_.IsValid -eq $true -and $_.Category -ne 'SqlDeepCatalog'} | Select-Object -Property Category,LocalFileName | Sort-Object -Property Category,LocalFileName | ConvertTo-Json | Out-File -FilePath ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Force
+    }
 }
 
 DownloadSqlDeepRepositoryItems -LocalRepositoryPath 'E:\log\SqlDeep'
