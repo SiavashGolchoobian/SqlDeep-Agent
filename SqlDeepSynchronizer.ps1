@@ -41,8 +41,7 @@ function DownloadFile {
     process{
         try {
             if((Test-Path -Path $FolderPath) -eq $true) {
-                #Invoke-WebRequest -Uri $URI -OutFile ($FolderPath+'\'+$FileName)
-                Start-BitsTransfer -Source $URI -Destination ($FolderPath+'\'+$FileName) -TransferType Download
+                Invoke-WebRequest -Uri $URI -OutFile ($FolderPath+'\'+$FileName)
                 $myAnswer=(Test-Path -Path ($FolderPath+'\'+$FileName))
             }else{
                 $myAnswer=$false
@@ -65,6 +64,7 @@ function DownloadSqlDeepRepositoryItems(){
         [WebRepositoryItem]$myWebRepositoryItem=$null;
         #===============Constants
         $mySqlDeepOfficialCatalogURI='https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/SqlDeepCatalog.json'
+        $myInstalledCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
         if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
         $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,'SqlDeepCatalog.json')
         $myWebRepositoryCollection+=($myWebRepositoryItem)
@@ -83,10 +83,11 @@ function DownloadSqlDeepRepositoryItems(){
         $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{DownloadFile -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)}
         #Validate all files are downloaded and validate their signatures
         foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
-            if ((Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())).Status -notin ('Valid','UnknownError')) {
-                Write-Host ('Signature is mismatched for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
+            $mySignerCertificate=Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())
+            if ($mySignerCertificate.Status -notin ('Valid','UnknownError') -or $mySignerCertificate.SignerCertificate.Thumbprint -ne $myInstalledCertificate.Thumbprint) {
+                Write-Host ('Signature is not valid for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
                 $myWebRepositoryItem.IsValid=$false
-                #Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
+                Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
             } 
         }
     }
