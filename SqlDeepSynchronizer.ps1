@@ -60,12 +60,14 @@
             #Create SaveToFolderPath if not exists
             [bool]$myAnswer=$false
             if((Test-Path -Path $FolderPath) -eq $false) {
+                Write-Host ('Creating destination folder named ' + $FolderPath)
                 New-Item -ItemType Directory -Path $FolderPath -Force
             }
         }
         process{
             try {
                 if((Test-Path -Path $FolderPath) -eq $true) {
+                    Write-Host ('Downloading ' + $URI)
                     Invoke-WebRequest -Uri $URI -OutFile ($FolderPath+'\'+$FileName)
                     $myAnswer=(Test-Path -Path ($FolderPath+'\'+$FileName))
                 }else{
@@ -184,41 +186,55 @@
             $mySqlDeepOfficialCatalogFilename=$mySqlDeepOfficialCatalogURI.Split('/')[-1]
             if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
             $myLocalRepositoryArchivePath=$LocalRepositoryPath+'\Archive\'+(Get-Date -Format "yyyyMMdd_HHmmss").ToString()
-            if((Test-Path -Path $myLocalRepositoryArchivePath) -eq $false) {New-Item -ItemType Directory -Path $myLocalRepositoryArchivePath -Force}
+            if((Test-Path -Path $myLocalRepositoryArchivePath) -eq $false) {
+                Write-Host ('Creating archive folder named ' + $myLocalRepositoryArchivePath)
+                $null = New-Item -ItemType Directory -Path $myLocalRepositoryArchivePath -Force
+            }
             $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,$mySqlDeepOfficialCatalogFilename,'This file contains standard SqlDeep catalog items to download.')
             $myWebRepositoryCollection+=($myWebRepositoryItem)
         }
         process{
             #Download Catalog file(s)
-            $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{
-                Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
+            $null = $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{
+                if (Test-Path -Path ($_.FilePath()) -PathType Leaf){
+                    Write-Host ('Move old file ' + ($_.FilePath()) + ' to ' + $myLocalRepositoryArchivePath)
+                    $null = Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
+                }
                 Download-File -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
             }
             #Fill RepositoryCollection via Catalog file(s)
             foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog)) {
                 $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.FilePath()) | ConvertFrom-Json
-                $myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
-                $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
-                $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
+                $null=$myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
+                $null=$myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
+                $null=$myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
             }
             #Download non-catalog type Repository Contents
-            $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{
-                Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
-                Download-File -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
+            $null = $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{
+                if (Test-Path -Path ($_.FilePath()) -PathType Leaf) {
+                    Write-Host ('Move old file ' + ($_.FilePath()) + ' to ' + $myLocalRepositoryArchivePath)
+                    $null = Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
+                }
+                $null = Download-File -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
             }
             #Validate all files are downloaded and validate their signatures
             foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
+                Write-Host ('Check signature of file ' + ($myWebRepositoryItem.FilePath()))
                 $mySignerCertificate=Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())
                 if ($mySignerCertificate.Status -notin ('Valid','UnknownError') -or $mySignerCertificate.SignerCertificate.Thumbprint -ne $myInstalledCertificate.Thumbprint) {
                     Write-Host ('Signature is not valid for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
                     $myWebRepositoryItem.IsValid=$false
-                    Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
+                    $null = Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
                 } 
             }
         }
         end{
-            Move-Item -Path ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Destination $myLocalRepositoryArchivePath -Force 
+            if (Test-Path -Path ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -PathType Leaf) {
+                Write-Host ('Move old file ' + ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') + ' to ' + $myLocalRepositoryArchivePath)
+                $null = Move-Item -Path ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Destination $myLocalRepositoryArchivePath -Force 
+            }
             $null = $myWebRepositoryCollection | Where-Object {$_.IsValid -eq $true -and $_.Category -ne 'SqlDeepCatalog'} | Select-Object -Property Category,LocalFileName,Description | Sort-Object -Property Category,LocalFileName | ForEach-Object{$myAnswer+=[RepositoryItem]::New($_.Category,$_.LocalFileName,$_.Description)}
+            Write-Host ('Save RepositoryItems catalog to ' + ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result'))
             $null = $myAnswer | ConvertTo-Json | Out-File -FilePath ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Force
             return $myAnswer
         }
@@ -257,6 +273,7 @@
             try
             {
                 if (Test-Path -Path $DacpacFilePath) {
+                    Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
                     $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
                     $myAnswer=$true
                 }
@@ -303,6 +320,7 @@
         process{
             if ($null -ne $SqlDeepRepositoryItems){
                 foreach($mySqlDeepRepositoryItem in ($SqlDeepRepositoryItems|Where-Object -Property Category -In $myAcceptedCategories)){
+                    Write-Host ('Publish Repository file ' + $mySqlDeepRepositoryItem.FileName)
                     $myItemType=SWITCH($mySqlDeepRepositoryItem.FileName.Split('.')[-1].ToUpper()) {
                         'PSM1'  {'OTHER'}
                         'PS1'   {'POWERSHELL'}
@@ -341,8 +359,7 @@
         [CmdletBinding(DefaultParameterSetName = 'SYNC_ONLINE')]
         param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
-            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string",ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][ValidateNotNullOrEmpty()][string]$ConnectionString,
-            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems",ParameterSetName = 'SYNC_ONLINE')]$SqlDeepRepositoryItems,
+            [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string",ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][ValidateNotNullOrEmpty()][string]$ConnectionString,
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file path",ParameterSetName = 'SYNC_OFFLINE')]$SqlDeepRepositoryItemsFileName,
             [Parameter(Mandatory=$false,ParameterSetName = 'DOWNLOAD')][Parameter(ParameterSetName = 'SYNC_ONLINE')][Switch]$DownloadAssets,
             [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncDatabaseModule,
@@ -352,26 +369,36 @@
         process{
             [RepositoryItem[]]$myRepositoryItems=$null
             if ($DownloadAssets) {
-                Write-Host 'Download ...'
+                Write-Host 'Download ...' -ForegroundColor Green
                 $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
             }
             if ($SyncDatabaseModule) {
-                Write-Host 'SyncDatabaseModule ...'
+                Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
                 if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-                    Write-Host 'Load Catalog ...'
-                    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\SqlDeepCatalog.json.result')
+                    Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+                    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
                 }
-                Write-Host 'Publish DatabaseDacPac ...'
-                $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{Publish-DatabaseDacPac -DacpacFilePath ($_.FileName) -ConnectionString $ConnectionString}
+                if ($null -ne $myRepositoryItems){
+                    Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
+                    $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+                        Publish-DatabaseDacPac -DacpacFilePath ($_.FileName) -ConnectionString $ConnectionString
+                    }
+                }else{
+                    Write-Host 'Catalog is empty.' -ForegroundColor Red
+                }
             }
             if ($SyncScriptRepository) {
-                Write-Host 'SyncScriptRepository ...'
+                Write-Host 'SyncScriptRepository ...' -ForegroundColor Green
                 if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-                    Write-Host 'Load Catalog ...'
-                    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\SqlDeepCatalog.json.result')
+                    Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+                    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
                 }
-                Write-Host 'Publish DatabaseRepositoryScripts ...'
-                Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
+                if ($null -ne $myRepositoryItems){
+                    Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
+                    Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
+                }else{
+                    Write-Host 'Catalog is empty.' -ForegroundColor Red
+                }
             }
         }
         end{}
@@ -382,4 +409,5 @@
 # Export-ModuleMember -Function Sync-SqlDeep
 # #endregion
 
-Sync-SqlDeep -LocalRepositoryPath 'E:\Log\SqlDeep' -DownloadAssets
+#Sync-SqlDeep -SyncDatabaseModule -LocalRepositoryPath 'E:\Log\SqlDeep' -ConnectionString 'Data Source=172.18.3.49,2019;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=Armin1355$' -SqlDeepRepositoryItemsFileName 'SqlDeepCatalog.json.result'
+Sync-SqlDeep -DownloadAssets -LocalRepositoryPath 'E:\Log\SqlDeep'
