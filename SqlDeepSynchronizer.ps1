@@ -9,14 +9,16 @@ Class WebRepositoryItem {
     [string]$FileURI
     [string]$LocalFileName
     [string]$LocalFolderPath
+    [string]$Description
     [bool]$IsValid
    
-    WebRepositoryItem([SqlDeepRepositoryItemCategory]$Category,[string]$FileURI,[string]$LocalFolderPath,[string]$LocalFileName){
+    WebRepositoryItem([SqlDeepRepositoryItemCategory]$Category,[string]$FileURI,[string]$LocalFolderPath,[string]$LocalFileName,[string]$Description){
         Write-Verbose 'WebRepositoryItem object initializing started'
         $this.Category=$Category
         $this.FileURI=$FileURI
         $this.LocalFolderPath=$LocalFolderPath
         $this.LocalFileName=$LocalFileName
+        $this.Description=$Description
         $this.IsValid=$true
         Write-Verbose 'WebRepositoryItem object initialized'
     }
@@ -27,11 +29,13 @@ Class WebRepositoryItem {
 Class RepositoryItem {
     [SqlDeepRepositoryItemCategory]$Category
     [string]$FileName
+    [string]$Description
    
-    RepositoryItem([SqlDeepRepositoryItemCategory]$Category,[string]$FileName){
+    RepositoryItem([SqlDeepRepositoryItemCategory]$Category,[string]$FileName,[string]$Description){
         Write-Verbose 'RepositoryItem object initializing started'
         $this.Category=$Category
         $this.FileName=$FileName
+        $this.Description=$Description
         Write-Verbose 'RepositoryItem object initialized'
     }
     [string] FilePath([string]$FolderPath){
@@ -163,7 +167,7 @@ function Find-SqlPackageLocation {
 function DownloadSqlDeepRepositoryItems(){
     [OutputType([RepositoryItem[]])]
     param (
-        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="URI address to download")][string]$LocalRepositoryPath
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path to save downloaded items")][string]$LocalRepositoryPath
     )
     begin{
         #===============Parameters
@@ -180,7 +184,7 @@ function DownloadSqlDeepRepositoryItems(){
         if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
         $myLocalRepositoryArchivePath=$LocalRepositoryPath+'\Archive\'+(Get-Date -Format "yyyyMMdd_HHmmss").ToString()
         if((Test-Path -Path $myLocalRepositoryArchivePath) -eq $false) {New-Item -ItemType Directory -Path $myLocalRepositoryArchivePath -Force}
-        $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,$mySqlDeepOfficialCatalogFilename)
+        $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,$mySqlDeepOfficialCatalogFilename,'This file contains standard SqlDeep catalog items to download.')
         $myWebRepositoryCollection+=($myWebRepositoryItem)
     }
     process{
@@ -192,9 +196,9 @@ function DownloadSqlDeepRepositoryItems(){
         #Fill RepositoryCollection via Catalog file(s)
         foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog)) {
             $myResult=Get-Content -Raw -Path ($myWebRepositoryItem.FilePath()) | ConvertFrom-Json
-            $myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name)))}
-            $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name)))}
-            $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name)))}
+            $myResult.library.SqlDeepPowershellTools    | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
+            $myResult.library.SqlDeepDatabase           | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepDatabase,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
+            $myResult.library.SqlDeepTsqlScript         | Where-Object -Property uri -ne $null | ForEach-Object{$myWebRepositoryCollection+=([WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepTsqlScript,($_.uri),$LocalRepositoryPath,($_.name),($_.description)))}
         }
         #Download non-catalog type Repository Contents
         $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{
@@ -213,7 +217,7 @@ function DownloadSqlDeepRepositoryItems(){
     }
     end{
         Move-Item -Path ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Destination $myLocalRepositoryArchivePath -Force 
-        $null = $myWebRepositoryCollection | Where-Object {$_.IsValid -eq $true -and $_.Category -ne 'SqlDeepCatalog'} | Select-Object -Property Category,LocalFileName | Sort-Object -Property Category,LocalFileName | ForEach-Object{$myAnswer+=[RepositoryItem]::New($_.Category,$_.LocalFileName)}
+        $null = $myWebRepositoryCollection | Where-Object {$_.IsValid -eq $true -and $_.Category -ne 'SqlDeepCatalog'} | Select-Object -Property Category,LocalFileName,Description | Sort-Object -Property Category,LocalFileName | ForEach-Object{$myAnswer+=[RepositoryItem]::New($_.Category,$_.LocalFileName,$_.Description)}
         $myAnswer | ConvertTo-Json | Out-File -FilePath ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Force
         return $myAnswer
     }
@@ -247,19 +251,40 @@ function Publish-DatabaseDacPac {
 }
 function Publish-DatabaseRepositoryScripts(){
     param (
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
-        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")][ValidateNotNullOrEmpty()][RepositoryItem[]]$SqlDeepRepositoryItems
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")][ValidateNotNullOrEmpty()][RepositoryItem[]]$SqlDeepRepositoryItems,
         [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file")][ValidateNotNullOrEmpty()][string]$SqlDeepRepositoryItemsFilePath
     )
     begin{
-        [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@()
-        $myAcceptedCategories+=SqlDeepPowershellTools
-        $myAcceptedCategories+=SqlDeepTsqlScript
+        [string]$myCommand=$null;
+        [string]$myItemType=$null;
+        [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@();
+        $myAcceptedCategories+=SqlDeepPowershellTools;
+        $myAcceptedCategories+=SqlDeepTsqlScript;
     }
     process{
         if ($null -ne $SqlDeepRepositoryItems){
             foreach($mySqlDeepRepositoryItem in ($SqlDeepRepositoryItems|Where-Object -Property Category -In $myAcceptedCategories)){
-                $mySqlDeepRepositoryItem.LocalFileName
+                $myItemType=SWITCH($mySqlDeepRepositoryItem.FileName.Split('.')[-1].ToUpper()) {
+                    'PSM1'  {'POWERSHELL'}
+                    'PS1'   {'OTHER'}
+                    'TSQL'  {'TSQL'}
+                    Default {'OTHER'}
+                }
+                $myCommand="
+                    EXECUTE [SqlDeep].[repository].[dbasp_upload_to_publisher] 
+                    N'"+$mySqlDeepRepositoryItem.FileName+"'
+                    ,"+$myItemType+"
+                    ,NULL
+                    ,"+$mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath)+"
+                    ,'TSX'
+                    ,N'"+$mySqlDeepRepositoryItem.FileName+"'
+                    ,1
+                    ,Null
+                    ,1
+                    ,1
+                "
             }
         }
     }

@@ -1,55 +1,73 @@
 {
   "product": "SqlDeep Catalog",
-  "version": 1,
+  "version": 3.0,
   "releaseDate": "2024-11-02T00:00:00.000Z",
   "library": [
     {
       "SqlDeepDatabase": [
         {
           "name": "SqlDeepDatabase.dacpac",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac",
+          "description": "The SqlDeep database project that contains many useful features for database administrators."
         }
       ],
       "SqlDeepPowershellTools": [
         {
           "name": "SqlDeepAudit.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepAudit.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepAudit.psm1",
+          "description": "Determine unusall SQL Admin logins and OS Server Logins."
         },
         {
           "name": "SqlDeepBackupFileCleaner.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepBackupFileCleaner.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepBackupFileCleaner.psm1",
+          "description": "Delete Old Backup files (as replacement of xp_delete_file)."
         },
         {
           "name": "SqlDeepBackupShipping.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepBackupShipping.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepBackupShipping.psm1",
+          "description": "Transfer backup files to other type of destinations like FTP,SFTP,SCP,UNC and another LOCAL destination."
         },
         {
           "name": "SqlDeepBackupTest.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepBackupTest.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepBackupTest.psm1",
+          "description": "Testing backup files restore and recover ability, also check healthy status via DBCC CHECKDB."
         },
         {
           "name": "SqlDeepCommon.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepCommon.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepCommon.psm1",
+          "description": "Common functions of SqlDeep modules."
         },
         {
           "name": "SqlDeepDatabaseShipping.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepDatabaseShipping.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepDatabaseShipping.psm1",
+          "description": "continuously ship database(s) from it's source to specified destination."
         },
         {
           "name": "SqlDeepFileEncryption.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepFileEncryption.ps1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepFileEncryption.ps1",
+          "description": "Encrypt and Decrypt file by PKI mechanism."
         },
         {
           "name": "SqlDeepLogWriter.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepLogWriter.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepLogWriter.psm1",
+          "description": "Log writer module for loging events on console, text file and database table."
         },
         {
           "name": "SqlDeepRestoreBackupRepository.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepRestoreBackupRepository.ps1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepRestoreBackupRepository.ps1",
+          "description": "Generate and execute restore database command according to analyzing list of files stored on the disk."
         },
         {
           "name": "SqlDeepSync.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepSync.psm1"
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepSync.psm1",
+          "description": "Sync SqlDeep database objects with master branch of SqlDeep project dacpac file."
+        }
+      ],
+      "SqlDeepTsqlScript": [
+        {
+          "name": "SqlDeepTemplate_ScriptRepositoryJob.sql",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac",
+          "description": "A powershell job template to running powershell scripts via jobs on sql server without any PSSQL limitations, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours."
         }
       ]
     }
