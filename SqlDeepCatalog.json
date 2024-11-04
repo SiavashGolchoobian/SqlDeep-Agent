@@ -66,7 +66,7 @@
       "SqlDeepTsqlScript": [
         {
           "name": "SqlDeepTemplate_ScriptRepositoryJob.sql",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Take-Release/Assets/TSQL/SqlDeepTemplate_ScriptRepositoryJob.sql",
           "description": "A powershell job template to running powershell scripts via jobs on sql server without any PSSQL limitations, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours."
         }
       ]
