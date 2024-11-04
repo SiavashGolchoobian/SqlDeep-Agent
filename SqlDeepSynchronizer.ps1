@@ -279,7 +279,6 @@
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")]$SqlDeepRepositoryItems
         )
         begin{
-            [string]$myCommand=$null;
             [string]$myItemType=$null;
             [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@();
             $myAcceptedCategories+=[SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools;
