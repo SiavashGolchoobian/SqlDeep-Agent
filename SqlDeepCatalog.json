@@ -13,6 +13,11 @@
       ],
       "SqlDeepPowershellTools": [
         {
+          "name": "HelloWorld.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Take-Release/Assets/Powershell/HelloWorld.ps1",
+          "description": "A Sample simple script for test purpose."
+        },
+        {
           "name": "SqlDeepAudit.psm1",
           "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepAudit.psm1",
           "description": "Determine unusall SQL Admin logins and OS Server Logins."
@@ -40,7 +45,7 @@
         {
           "name": "SqlDeepDatabaseShipping.psm1",
           "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepDatabaseShipping.psm1",
-          "description": "continuously ship database(s) from it's source to specified destination."
+          "description": "Continuously ship database(s) from it's source to specified destination."
         },
         {
           "name": "SqlDeepFileEncryption.ps1",
@@ -51,6 +56,11 @@
           "name": "SqlDeepLogWriter.psm1",
           "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepLogWriter.psm1",
           "description": "Log writer module for loging events on console, text file and database table."
+        },
+        {
+          "name": "SqlDeepOsUserAudit.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Take-Release/Assets/Powershell/SqlDeepOsUserAudit.ps1",
+          "description": "A Sample of Auditing OS logins."
         },
         {
           "name": "SqlDeepRestoreBackupRepository.ps1",
@@ -67,7 +77,7 @@
         {
           "name": "SqlDeepTemplate_ScriptRepositoryJob.sql",
           "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Take-Release/Assets/TSQL/SqlDeepTemplate_ScriptRepositoryJob.sql",
-          "description": "A powershell job template to running powershell scripts via jobs on sql server without any PSSQL limitations, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours."
+          "description": "A Sample powershell job template to running powershell scripts via jobs on sql server without any PSSQL limitations, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours."
         }
       ]
     }
