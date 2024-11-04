@@ -269,7 +269,7 @@ function Publish-DatabaseRepositoryScripts(){
                 $myItemType=SWITCH($mySqlDeepRepositoryItem.FileName.Split('.')[-1].ToUpper()) {
                     'PSM1'  {'POWERSHELL'}
                     'PS1'   {'OTHER'}
-                    'TSQL'  {'TSQL'}
+                    'SQL'  {'TSQL'}
                     Default {'OTHER'}
                 }
                 $myCommand="
