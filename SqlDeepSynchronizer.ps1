@@ -378,6 +378,8 @@
     }
 #endregion
 
-#region Export
-Export-ModuleMember -Function Sync-SqlDeep
-#endregion
+# #region Export
+# Export-ModuleMember -Function Sync-SqlDeep
+# #endregion
+
+Sync-SqlDeep -LocalRepositoryPath 'E:\Log\SqlDeep' -DownloadAssets
