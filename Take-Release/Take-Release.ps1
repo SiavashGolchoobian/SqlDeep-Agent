@@ -16,18 +16,19 @@ $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Wh
 [string]$SqlDeepProjectPath='D:\Siavash\TFS\sqldeep\'
 [string]$SqlDeepProjectDacpacFilePath=$SqlDeepProjectPath+'Assets\Release\Latest\SqlDeep.dacpac'
 
-$myFileList['SqlDeepTemplate_ScriptRepositoryJob.sql']=[PSCustomObject]@{ItemType='TSQL';Tags='TSX';ItemName='';FilePath=$SqlDeepAssetTsqlScriptPath;ItemVersion='1.0';Description='Powershell Repository Job, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours.'}
-$myFileList['HelloWorld.ps1']=                  [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepAssetPowershellScriptPath;ItemVersion='1.0';Description='Implement Sample Powershell Script'}
-$myFileList['SqlDeepOsUserAudit.ps1']=          [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepAssetPowershellScriptPath;ItemVersion='1.0';Description='Implement OS logins audit'}
-$myFileList['SqlDeepAudit.psm1']=               [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Find Unusall SQL Admin or OS Logins Powershell Module'}
-$myFileList['SqlDeepBackupFileCleaner.psm1']=   [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Delete Old Backup files Powershell Module'}
-$myFileList['SqlDeepBackupShipping.psm1']=      [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Backup Shipping Powershell Module'}
-$myFileList['SqlDeepBackupTest.psm1']=          [PSCustomObject]@{ItemType='OTHER';Tags='MSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Testing Backup Files Powershell Module'}
-$myFileList['SqlDeepCommon.psm1']=              [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Common Functions Powershell Module'}
-$myFileList['SqlDeepDatabaseShipping.psm1']=    [PSCustomObject]@{ItemType='OTHER';Tags='MSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep DatabaseShipping Powershell Module'}
-$myFileList['SqlDeepFileEncryption.ps1']=       [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Encrypt/Decrypt File Powershell Module'}
-$myFileList['SqlDeepLogWriter.psm1']=           [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep LogWriter Powershell Module'}
-$myFileList['SqlDeepSync.psm1']=                [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='SqlDeep Sync DB and Repo with master branch Powershell Module'}
+$myFileList['SqlDeepTemplate_ScriptRepositoryJob.sql']=[PSCustomObject]@{ItemType='TSQL';Tags='TSX';ItemName='';FilePath=$SqlDeepAssetTsqlScriptPath;ItemVersion='1.0';Description='A Sample powershell job template to running powershell scripts via jobs on sql server without any PSSQL limitations, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours.'}
+$myFileList['HelloWorld.ps1']=                      [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepAssetPowershellScriptPath;ItemVersion='1.0';Description='A Sample simple script for test purpose.'}
+$myFileList['SqlDeepAudit.psm1']=                   [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Determine unusall SQL Admin logins and OS Server Logins.'}
+$myFileList['SqlDeepBackupFileCleaner.psm1']=       [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Delete Old Backup files (as replacement of xp_delete_file).'}
+$myFileList['SqlDeepBackupShipping.psm1']=          [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Transfer backup files to other type of destinations like FTP,SFTP,SCP,UNC and another LOCAL destination.'}
+$myFileList['SqlDeepBackupTest.psm1']=              [PSCustomObject]@{ItemType='OTHER';Tags='MSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Testing backup files restore and recover ability, also check healthy status via DBCC CHECKDB.'}
+$myFileList['SqlDeepCommon.psm1']=                  [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Common functions of SqlDeep modules.'}
+$myFileList['SqlDeepDatabaseShipping.psm1']=        [PSCustomObject]@{ItemType='OTHER';Tags='MSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Continuously ship database(s) from its source to specified destination.'}
+$myFileList['SqlDeepFileEncryption.ps1']=           [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Encrypt and Decrypt file by PKI mechanism.'}
+$myFileList['SqlDeepLogWriter.psm1']=               [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Log writer module for loging events on console, text file and database table.'}
+$myFileList['SqlDeepOsUserAudit.ps1']=              [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepAssetPowershellScriptPath;ItemVersion='1.0';Description='A Sample of Auditing OS logins.'}
+$myFileList['SqlDeepRestoreBackupRepository.ps1']=  [PSCustomObject]@{ItemType='POWERSHELL';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Generate and execute restore database command according to analyzing list of files stored on the disk.'}
+$myFileList['SqlDeepSync.psm1']=                    [PSCustomObject]@{ItemType='OTHER';Tags='TSX';ItemName='';FilePath=$SqlDeepPowershellToolsPath;ItemVersion='1.0';Description='Sync SqlDeep database objects with master branch of SqlDeep project dacpac file.'}
 
 #-----Complete object attributes
 Write-Host 'Complete object attributes'
@@ -87,7 +88,7 @@ foreach ($myFile in $myFileList.Keys) {
         DECLARE @AllowToReplaceIfExist BIT=1
         DECLARE @AllowGenerateMetadata BIT=1
 
-        EXECUTE [SqlDeep].[repository].[dbasp_upload_to_publisher] 
+        EXECUTE [SqlDeep].[repository].[dbasp_upload_to_publisher_byfilepath] 
         @ItemName
         ,@ItemType
         ,@ItemVersion

@@ -52,7 +52,7 @@
         {
           "name": "SqlDeepDatabaseShipping.psm1",
           "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepDatabaseShipping.psm1",
-          "description": "Continuously ship database(s) from it's source to specified destination."
+          "description": "Continuously ship database(s) from its source to specified destination."
         },
         {
           "name": "SqlDeepFileEncryption.ps1",
