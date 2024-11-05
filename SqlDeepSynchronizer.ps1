@@ -122,12 +122,12 @@ param (
         [OutputType([string])]
         param()
         begin {
+            [string]$myAnswer=$null
             [string]$myExeName = "SqlPackage.exe";
             [string]$mySqlPackageFilePath=$null;
             [string]$mySqlPackageFolderPath=$null;
         }
         process{
-            [string]$myAnswer=$null
             [string]$myProductVersion=$null
             try {
                 # Get SQL Server locations
@@ -175,7 +175,32 @@ param (
             return $myAnswer
         }
         end {
+            if ($null -eq $myAnswer) {
+                Write-Host 'DacPac module does not found, please Downloaded and install it from https://www.powershellgallery.com/packages/PublishDacPac/ or run this command in powershell console: Install-Module -Name PublishDacPac'
+            }
         }
+    }
+    function Validate-Signature {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="File path")][ValidateNotNullOrEmpty()][string]$FilePath
+        )
+        begin{
+            [bool]$myAnswer=$false
+            $myInstalledCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
+        }
+        process{
+            Write-Host ('Check signature of file ' + $FilePath)
+            $mySignerCertificate=Get-AuthenticodeSignature -FilePath $FilePath
+            if ($mySignerCertificate.Status -notin ('Valid','UnknownError') -or $mySignerCertificate.SignerCertificate.Thumbprint -ne $myInstalledCertificate.Thumbprint) {
+                Write-Host ('Signature is not valid for ' + $FilePath + ' file' )
+                $myAnswer=$false
+            } else {
+                $myAnswer=$true
+            }
+            return $myAnswer
+        }
+        end{}
     }
     function Download-RepositoryItems(){
         [OutputType([RepositoryItem[]])]
@@ -192,7 +217,6 @@ param (
             [RepositoryItem[]]$myAnswer=$null;
             #===============Constants
             $mySqlDeepOfficialCatalogURI='https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/SqlDeepCatalog.json'
-            $myInstalledCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
             $mySqlDeepOfficialCatalogFilename=$mySqlDeepOfficialCatalogURI.Split('/')[-1]
             if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
             $myLocalRepositoryArchivePath=$LocalRepositoryPath+'\Archive\'+(Get-Date -Format "yyyyMMdd_HHmmss").ToString()
@@ -229,10 +253,8 @@ param (
             }
             #Validate all files are downloaded and validate their signatures
             foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
-                Write-Host ('Check signature of file ' + ($myWebRepositoryItem.FilePath()))
-                $mySignerCertificate=Get-AuthenticodeSignature -FilePath ($myWebRepositoryItem.FilePath())
-                if ($mySignerCertificate.Status -notin ('Valid','UnknownError') -or $mySignerCertificate.SignerCertificate.Thumbprint -ne $myInstalledCertificate.Thumbprint) {
-                    Write-Host ('Signature is not valid for ' + $myWebRepositoryItem.FilePath() + ' file. this file was removed.' )
+                if ((Validate-Signature -FilePath ($myWebRepositoryItem.FilePath())) -eq $false){
+                    Write-Host ('because of invalid signature file was removed.' )
                     $myWebRepositoryItem.IsValid=$false
                     $null = Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
                 } 
@@ -282,10 +304,14 @@ param (
             [bool]$myAnswer=$false;
             try
             {
-                if (Test-Path -Path $DacpacFilePath) {
-                    Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
-                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
-                    $myAnswer=$true
+                if (null -ne (Find-SqlPackageLocation)) {
+                    if (Test-Path -Path $DacpacFilePath) {
+                        Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
+                        $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                        $myAnswer=$true
+                    }
+                }else{
+                    Write-Error 'DacPac binaries does not found. please install dacpac binaries.'
                 }
                 return $myAnswer
             }
@@ -306,6 +332,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")]$SqlDeepRepositoryItems
         )
         begin{
+            [string]$myItemExtension=$null;
             [string]$myItemType=$null;
             [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@();
             $myAcceptedCategories+=[SqlDeepRepositoryItemCategory]::SqlDeepPowershellTools;
@@ -331,27 +358,33 @@ param (
             if ($null -ne $SqlDeepRepositoryItems){
                 foreach($mySqlDeepRepositoryItem in ($SqlDeepRepositoryItems|Where-Object -Property Category -In $myAcceptedCategories)){
                     Write-Host ('Publish Repository file ' + $mySqlDeepRepositoryItem.FileName)
-                    $myItemType=SWITCH($mySqlDeepRepositoryItem.FileName.Split('.')[-1].ToUpper()) {
+                    $myItemExtension=$mySqlDeepRepositoryItem.FileName.Split('.')[-1].ToUpper()
+                    $myItemType=SWITCH($myItemExtension) {
                         'PSM1'  {'OTHER'}
                         'PS1'   {'POWERSHELL'}
                         'SQL'   {'TSQL'}
                         Default {'OTHER'}
                     }
                     try {
-                        #Get the file
-                        [Byte[]]$myFileContent = Get-Content -AsByteStream ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))
-                        $mySqlCommand.Parameters["@ItemName"].Value=($mySqlDeepRepositoryItem.FileName)
-                        $mySqlCommand.Parameters["@ItemType"].Value=($myItemType)
-                        $mySqlCommand.Parameters["@ItemVersion"].Value=[DBNull]::Value
-                        $mySqlCommand.Parameters["@ItemContent"].Size=-1
-                        $mySqlCommand.Parameters["@ItemContent"].Value=$myFileContent
-                        $mySqlCommand.Parameters["@Tags"].Value=[DBNull]::Value
-                        $mySqlCommand.Parameters["@Description"].Value=($mySqlDeepRepositoryItem.Description)
-                        $mySqlCommand.Parameters["@IsEnabled"].Value=1
-                        $mySqlCommand.Parameters["@Metadata"].Value=[DBNull]::Value
-                        $mySqlCommand.Parameters["@AllowToReplaceIfExist"].Value=1
-                        $mySqlCommand.Parameters["@AllowGenerateMetadata"].Value=1
-                        $null = $mySqlCommand.ExecuteNonQuery()
+                        #Validate file signatures
+                        if ($myItemExtension -in ('PSM1','PS1') -and (Validate-Signature -FilePath ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))) -eq $false){
+                            Write-Host ('because of invalid signature file was skipped.' )
+                        } else {
+                            #Get the file
+                            [Byte[]]$myFileContent = Get-Content -AsByteStream ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))
+                            $mySqlCommand.Parameters["@ItemName"].Value=($mySqlDeepRepositoryItem.FileName)
+                            $mySqlCommand.Parameters["@ItemType"].Value=($myItemType)
+                            $mySqlCommand.Parameters["@ItemVersion"].Value=[DBNull]::Value
+                            $mySqlCommand.Parameters["@ItemContent"].Size=-1
+                            $mySqlCommand.Parameters["@ItemContent"].Value=$myFileContent
+                            $mySqlCommand.Parameters["@Tags"].Value=[DBNull]::Value
+                            $mySqlCommand.Parameters["@Description"].Value=($mySqlDeepRepositoryItem.Description)
+                            $mySqlCommand.Parameters["@IsEnabled"].Value=1
+                            $mySqlCommand.Parameters["@Metadata"].Value=[DBNull]::Value
+                            $mySqlCommand.Parameters["@AllowToReplaceIfExist"].Value=1
+                            $mySqlCommand.Parameters["@AllowGenerateMetadata"].Value=1
+                            $null = $mySqlCommand.ExecuteNonQuery()
+                        }
                     }
                     catch {
                         Write-Error (($_.ToString()).ToString())
@@ -463,8 +496,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCA0fejZmj7c2YO3
-# VGZfAHIDFnqY0PRlH++aIgNpvoj4XaCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAcq27CZn2ImkZz
+# mSFhlCFjIW87ABKNjgnxcLfdL0NfxqCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -586,28 +619,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCAeIB0L62xf4//ZcB6uV7tsGdf0QAMyofuDRYs+feQ1YzANBgkqhkiG9w0BAQEF
-# AASCAQAkWK3ZI7AhWBkxSA2IhTt+PWQTCLw8breKUdxSSNFKjMuR4PN/3mibeEI7
-# XantDUzbUsetX9MLbLf8IzdLjP2KqSBnw60UZEzMxOVDs9khS7f+qS4AgjdWQawo
-# 4JzIH9jljJJGg08iteTdhCKaAikkHncNcUNklXtC9lM+/0TAeWelYcd2JueKAIjE
-# GL32oNQbdxlZhLWbxboPM/Y/ADjGU1teuVJJRfuwm0B5KRO9mXlhKTbQssU8qeAx
-# dv7nmnvQs4pOGFuI9t3cTfn7LUl2E6oRkCd20YvFsQDu/+BmBoiaRizYojFXmHUT
-# C+LYFcUEtcxIP0cE/5lvShpX5dqMoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCBEesndS2J8el9K/sTYjX1hBwEaqYF4dodsrujzbt6DlTANBgkqhkiG9w0BAQEF
+# AASCAQA/R5TebPg7KkTc3MeaiidAqawV3hnQjq2181XARUAR1HtPxRZadALEHu5E
+# wBOjcEWPt91+S6o9BgAHwHqsoLNk033lobDpqeeO3I07uEKCEBZfG8SUh3G8pweA
+# Qc3imhZa3wP2oYLKerYNMMvKYtbuTGFcK8Gkm1L9lqL37qbGolYsULQZDkDm7tih
+# A3T45jdM7d6QEvnUuT+vIsr2TPSBkqqVITuu+4JvLXLjm0LzfhIE5ZbKrOQ004dg
+# C4DmPToR0XfjLMVxIWUq6tFHL7zLlYeHS2jry5TX6SNrQ7pbRYRe24XihmX5Qhpj
+# J16Ejp/f+XJSmOGtVb5HhHr6x8HnoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTEwNDIy
-# MTEwN1owLwYJKoZIhvcNAQkEMSIEIA0fZ07tAYmI2neyvuXqdcvpMUT+JP2OpxXT
-# RCjA5ZmoMA0GCSqGSIb3DQEBAQUABIICAAkL9dXbxIYqAf59nZoJ0TMh2Bh6vENh
-# zfT3KRsdhebP16zyZ7UxfgoaR3F3/+I/koGFfiL42E0SWh8EZuAsQqNyYOuR5Xhy
-# hTJN7lWKvZAMUUnqgXyKhVV1sCzfgDPSBPQbtkjtu2KNkFt9VahKGBXnKzB40/4n
-# RoRDIHj7QPuJgoBeVCHg1V3VBNPqyLdnk/AfZTuPyNdZzssMl58gwZSNU9D3dS/h
-# TmhjtC3mQxXeptP7mjZsBh5/2IUKyAUEgDEgd89Ymzj7aJETBhQQLPfaoW3IDeJZ
-# sL8PofvXp2DwB3cVCgq4qa48zp0xbOGNCpWOX01FvCOW5TWj73lkXnsFJ1dpM13u
-# 9wLFUKkPDqaaC+WCzUskAt6zioPl9Lg2yw9r24j0AEMWaOcy9auSlo2arAYMds8C
-# YP3hAztgd/KeDZ0tyMfAISA+JtYe2DCj9XogMTKysSSpTF4NG8huMXxbJlCS+Qkg
-# ahmVxeMqd4h1Yos1RgdeF4ZohazhnYtLwbRjfP5w3Q5PxmltYY7KhGERvcDMs3ak
-# /L2Ssq6FuAIBNGVFDL/sNY73FpilFePe7tleGVlJQVvmWwPt5zPrVwFu9A9N3X5a
-# yfgtP7KYKzIIT4+r25at6NGVy+9Qbo4y9Mqzm8GiVkNnpY1I4vOAOGR9f+WZlIl9
-# 1B2e+5oNB/+M
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTEwNTA3
+# NDkyNlowLwYJKoZIhvcNAQkEMSIEIHBTvjPCwP4h1d57J3C+s/Za2dKoLTHE53Gm
+# QInCiWr2MA0GCSqGSIb3DQEBAQUABIICALsHLtuKQV1siwc+uc64LYDUm5haWRt9
+# 0gqBLFNw0bq2j98/i9ZHtqtWh61IW82vrm++IR7yx6R9QgfDj5ibikVKb/2+1LQ2
+# ZIaFDn/cJia//M59JsSM0NBukZu+AMCX98MzE3bIUxnDWKROFqIiRRDHsx9+mKOs
+# lxlv1KBsl8T3odlHSVQHubLr8waLqCHXv/I9d9d8c9VwUOn79eXccuGOdUVnQbMB
+# 37A8VPsOxZZGUdDp8yhcM/X+fGV05qar+nyEuxUq9wVdeiVTD9UFg73/PJ2LJaSa
+# NFJse30OARJOwBDhC6myU3lvUtrSYHS6C+PRkCnelIBissmwpOi1j/gnz9+RRefn
+# CRh/pIvAuqRQoijEZNapUwX1Z21g5MiGeo7OvKwH83baC9VfbRd1rNpMhNpiDuiN
+# 1onIPYvYX4AYV3+xv9XVGOyUoyG/GLQk+6MRVD4sbbCItzzqfys/mDprUH3Q5vIw
+# YEx1jJN4wfxSxjHZxMAbq2WKw+/qL3+BtVt/BpJeAjiYpEAO6w7qEGd/3mhR2ao3
+# GkuTzysdIs/334uvNBBIGsuzZMuJTNrmRfKhn7diw67pwAEl+qu3mA8a7HIV3Kdv
+# UYB5+NPrnQU1C6pMXFsz9AlR8qNN0HBrKRCCOlYloZYBlLvDJgZUUeqQuzAZB6i7
+# XtsfAVXgCegm
 # SIG # End signature block
