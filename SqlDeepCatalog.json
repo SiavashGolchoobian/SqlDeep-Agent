@@ -75,8 +75,8 @@
           "description": "Generate and execute restore database command according to analyzing list of files stored on the disk."
         },
         {
-          "name": "SqlDeepDbPublisher.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepDbPublisher.psm1",
+          "name": "SqlDeepDatabasePublisher.psm1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-PowershellTools/raw/refs/heads/main/SqlDeepDatabasePublisher.psm1",
           "description": "Export and Publish database project and its objects via dacpac technology."
         }
       ],
