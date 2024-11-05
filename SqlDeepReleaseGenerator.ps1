@@ -1,4 +1,4 @@
-Using module 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Database-Shipping\SqlDeepDbPublisher.psm1'
+Using module 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Database-Shipping\SqlDeepDatabasePublisher.psm1'
 
 $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
 [string]$SqlDeepDbConnectionString2017='Data Source=172.18.3.49,2017;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=Armin1355$'
