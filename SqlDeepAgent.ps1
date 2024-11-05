@@ -60,6 +60,19 @@ param (
             return $myAnswer
         }
     }
+    function Clear-FolderPath { #Remove latest '\' char from folder path
+    [OutputType([string])]
+    param (
+        [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input folder path to evaluate")][AllowEmptyString()][AllowNull()][string]$FolderPath
+    )
+    begin{}
+    process{
+        $FolderPath=$FolderPath.Trim()
+        if ($FolderPath.ToCharArray()[-1] -eq '\') {$FolderPath=$FolderPath.Substring(0,$FolderPath.Length-1)}    
+        return $FolderPath
+    }
+    end{}    
+}
     function Download-File {
         [OutputType([bool])]
         param (
@@ -69,6 +82,7 @@ param (
         )
         begin{
             #Create SaveToFolderPath if not exists
+            Write-Host ('Download-File started.')
             [bool]$myAnswer=$false
             if((Test-Path -Path $FolderPath) -eq $false) {
                 Write-Host ('Creating destination folder named ' + $FolderPath)
@@ -89,7 +103,9 @@ param (
             }
             return $myAnswer
         }
-        end{}
+        end{
+            Write-Host ('Download-File finished.')
+        }
     }
     function Find-SqlPackageLocation {
         #Downloaded from https://www.powershellgallery.com/packages/PublishDacPac/
@@ -123,6 +139,7 @@ param (
         [OutputType([string])]
         param()
         begin {
+            Write-Host ('Find-SqlPackageLocation started.')
             [string]$myAnswer=$null
             [string]$myExeName = "SqlPackage.exe";
             [string]$mySqlPackageFilePath=$null;
@@ -138,7 +155,6 @@ param (
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\DAC\bin" -ErrorAction SilentlyContinue;
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio *\Common7\IDE\Extensions\Microsoft\SQLDB\DAC" -ErrorAction SilentlyContinue;
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\*\*\Common7\IDE\Extensions\Microsoft\SQLDB\DAC\" -ErrorAction SilentlyContinue;    
-
                 # For those that install SQLPackage.exe in a completely different location, set environment variable CustomSqlPackageInstallLocation
                 $myCustomInstallLocation = [Environment]::GetEnvironmentVariable('CustomSqlPackageInstallLocation');
                 $myCustomInstallLocation = Clear-FolderPath -FolderPath $myCustomInstallLocation
@@ -147,11 +163,9 @@ param (
                         $myPathsToSearch += Resolve-Path -Path ($myCustomInstallLocation+'\') -ErrorAction SilentlyContinue;
                     }        
                 }
-
                 foreach ($myPathToSearch in $myPathsToSearch) {
                     [System.IO.FileSystemInfo[]]$mySqlPackageExes += Get-Childitem -Path $myPathToSearch -Recurse -Include $myExeName -ErrorAction SilentlyContinue;
                 }
-
                 # list all the locations found
                 [string]$myCurrentVersion=''
                 foreach ($mySqlPackageExe in $mySqlPackageExes) {
@@ -161,12 +175,11 @@ param (
                         $myAnswer=$mySqlPackageExe
                     }
                     Write-Host ($myProductVersion + ' ' + $mySqlPackageExe);
-                }       
+                } 
             }
             catch {
                 Write-Error 'Find-SqlPackageLocations failed with error: ' + $_.ToString();
             }
-
             if ($myAnswer) {
                 $mySqlPackageFilePath=$myAnswer
                 $mySqlPackageFolderPath=(Get-Item -Path $mySqlPackageFilePath).DirectoryName
@@ -179,6 +192,7 @@ param (
             if ($null -eq $myAnswer) {
                 Write-Host 'DacPac module does not found, please Downloaded and install it from https://www.powershellgallery.com/packages/PublishDacPac/ or run this command in powershell console: Install-Module -Name PublishDacPac'
             }
+            Write-Host ('Find-SqlPackageLocation finished.')
         }
     }
     function Validate-Signature {
@@ -187,6 +201,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="File path")][ValidateNotNullOrEmpty()][string]$FilePath
         )
         begin{
+            Write-Host ('Validate-Signature started.')
             [bool]$myAnswer=$false
             $myInstalledCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
         }
@@ -201,7 +216,9 @@ param (
             }
             return $myAnswer
         }
-        end{}
+        end{
+            Write-Host ('Validate-Signature finished.')
+        }
     }
     function Download-RepositoryItems(){
         [OutputType([RepositoryItem[]])]
@@ -209,6 +226,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path to save downloaded items")][string]$LocalRepositoryPath
         )
         begin{
+            Write-Host ('Download-RepositoryItems started.')
             #===============Parameters
             [string]$mySqlDeepOfficialCatalogURI=$null;
             [string]$mySqlDeepOfficialCatalogFilename=$null;
@@ -270,6 +288,7 @@ param (
             $null = $myWebRepositoryCollection | Where-Object {$_.IsValid -eq $true -and $_.Category -ne 'SqlDeepCatalog'} | Select-Object -Property Category,LocalFileName,Description | Sort-Object -Property Category,LocalFileName | ForEach-Object{$myAnswer+=[RepositoryItem]::New($_.Category,$_.LocalFileName,$_.Description)}
             Write-Host ('Save RepositoryItems catalog to ' + ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result'))
             $null = $myAnswer | ConvertTo-Json | Out-File -FilePath ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Force
+            Write-Host ('Download-RepositoryItems finished.')
             return $myAnswer
         }
     }
@@ -279,6 +298,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file")][ValidateNotNullOrEmpty()][string]$FilePath
         )
         begin{
+            Write-Host ('ConvertFrom-RepositoryItemsFile started.')
             [RepositoryItem[]]$myAnswer=$null
         }
         process{
@@ -298,6 +318,7 @@ param (
         }
         end{
             Write-Host ($myAnswer.Count.ToString() + ' items detected in catalog file.')
+            Write-Host ('ConvertFrom-RepositoryItemsFile finished.')
         }
     }
     function Publish-DatabaseDacPac {
@@ -307,12 +328,13 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString
         )
         begin {
+            Write-Host ('Publish-DatabaseDacPac started.')
             [bool]$myAnswer=$false;
         }
         process {
             try
             {
-                if (null -ne (Find-SqlPackageLocation)) {
+                if ($null -ne (Find-SqlPackageLocation)) {
                     if (Test-Path -Path $DacpacFilePath -PathType Leaf) {
                         Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
                         $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
@@ -331,7 +353,9 @@ param (
             }
             return $myAnswer;
         }
-        end {}
+        end {
+            Write-Host ('Publish-DatabaseDacPac finished.')
+        }
     }
     function Publish-DatabaseRepositoryScripts(){
         param (
@@ -340,6 +364,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")]$SqlDeepRepositoryItems
         )
         begin{
+            Write-Host ('Publish-DatabaseRepositoryScripts started.')
             [string]$myItemExtension=$null;
             [string]$myItemType=$null;
             [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@();
@@ -411,6 +436,7 @@ param (
             $mySqlCommand.Dispose();
             $mySqlConnection.Close();
             $mySqlConnection.Dispose();
+            Write-Host ('Publish-DatabaseRepositoryScripts finished.')
         }
     }
     function Sync-SqlDeep(){
@@ -424,6 +450,7 @@ param (
             [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncScriptRepository
         )
         begin{
+            Write-Host ('Sync-SqlDeep started.')
             if ($LocalRepositoryPath[-1] -eq '\'){
                 $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
             }
@@ -463,7 +490,9 @@ param (
                 }
             }
         }
-        end{}
+        end{
+            Write-Host ('Sync-SqlDeep finished.')
+        }
     }
 #endregion
 
@@ -513,8 +542,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCre8D/Hg56qjcG
-# fDkzXD2i1r7UxSfFIu4u2Q+LPypndKCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCrCKC0lcqScD0W
+# h+YDmmTbI1kPpP8tukLGXaKPDQrhW6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -636,28 +665,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCDYRhKPtzBA+G0D7YHQO5yacSXeiG9cxbLse/5Ej4pqVDANBgkqhkiG9w0BAQEF
-# AASCAQCExaSczlZt2hT0NAXqlP1cdQuFl+YYFoDjxqqxlyTCiIyXvk5Y9qTw7KS+
-# t8SnYp6yosl4Z9eQkP7Gjj1tiTRWeDcjMzTETfaIe+eTv5df87WO0zoJtoUwPbX5
-# +jS+RagY03pBd6Uhkkm5ER7S0gKT8k405RhOsVcV2Wg9fe+YEAYQJdgb2zv837dK
-# xN0EdrXb6m3fVQxqvo2r1pgWeyr5jDBeusqwfg4Pw70IwByfQyts3S6rRb3ZsblW
-# Ghu++tQrJ3ZhrLVwn8wC1bP1Jo8N1p6VaFRQGCEwawexp8llaz0YkH3V4dvE7JKw
-# U2XMlHwK5lGxyemiVUKT7VrfO9QRoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCAxa5oMFWQtmHa2LaCj9MYnRPrq1OUVwBl5Ty1zsyZuHDANBgkqhkiG9w0BAQEF
+# AASCAQCxLLBoqrer1+C0iJ7+RXjVD3QAyjucpSD806ZBZZ+NqMKzxB7gkNvJxJA3
+# fSajUqVL9TiceYjg2D4hmvFfQ8ujariSGIQ1Epx5Z6P81JqxjcqUkDCDS16gyIDB
+# FxT9/U+XYR/dRIR3GFHc+hyfnJ3zgCCqpoyXrZQ+cBZse2zleWB5RBGnA8jctOIB
+# n3oTdmyNbBxKQZdX6siA15CDP3trjzv9JWJoTJNmSbTZkailoN7rEFIAdO9uiJ3U
+# RRbmffFTpE7pOP8wvrGLZhCVhmA7oR4B6kmkSWPXIR27uWwwQ39Gqbar+RIW50Dz
+# 5MhPSIkp3yk8+qysWBk2b7KoF1aioYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTEwNTIw
-# MjgxMFowLwYJKoZIhvcNAQkEMSIEICiElBnph81lYeZ2FAYLw1J4L00/okKj35ke
-# MyvpoornMA0GCSqGSIb3DQEBAQUABIICAA/4hkcqwfvJV6PsCWJR0Izd+rXFw0ZD
-# 63kUTj0wRKQRnulap/mnUbyBDp2+vwAhrcbBh3WHmdxIXJwXDMfuD08dXQpecBzb
-# blrT478gKWAg0cy2g+t/6vmtqMZNMhkpCTQsBYjnGwwlMtzdUgx3bq252X/w6R/d
-# obzMqYw435m2lekb6eHbkt+NMLO3FkyqMyH1DgL+W+3eucL2D4cFFYgO7uHNeXSs
-# UDIUHZGA6q8GSJBDJuCvZMEp7CY3JmtPiWnvPz7fFq1P7VMnG86PvzWqbHp4p3Z7
-# HjeazFe6a+U/0mg8+WeIxIabye5vWpcDEaAX8y3sMfvEQSEsRo3cdSDr/KDLKQH+
-# cZ8SDTABVUPJrXvQDOlCdiTJ5Dbr7rq1HAOXds2eQMSNkfMyG3XwxAHvs/WDwRTY
-# QrR1T/5ylMtsfXQvKt1R57lu9kvR6Vps/FYceMhPSPcW1c7EHbkySwHIED3neqbd
-# hBRVEEAfJTsh6V1rSbujo5aIEqWVnLKWOUhEnED5yNY8wHkgcW9gZAZFdA77bagW
-# yVpq5LqyvWJejoIFev1U5KZZP4yJP67WW6tGEeiLADY0jllYSwi/XKk9pz9WbUi/
-# cs1c2tT6vAXZo6wB2fLmSQlX/O74Mh6KgNGklB8J1eW7fDiwkWuz3dYLPhXIW1OS
-# 4/nXrFClBMdx
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTEwNTIx
+# MDgzN1owLwYJKoZIhvcNAQkEMSIEIFcUf02VY2y11Z2d0E0/U7/HwLFu/z8dLowW
+# aeGQhdgSMA0GCSqGSIb3DQEBAQUABIICADVYn278wqFu5h0hghu5Ba9UA1ue0g41
+# gnoM/TZAXK71msieegGxtXoX7+NVUPw7hWe7DWQebsOelCF9sUEVLbyFHNK5KNa/
+# r6MC4o2K/1KBoIFLzB3n81/pkIgOm4pu9XhSWlV/Fs8yiMIhyYv+HfiGfVwHDhVx
+# Q3+5NTyFkismOPdgrj/VXCio3zQ6v1w1hIy2XYOHxfZJP4WEVGZfDHLHDjn1J2Ja
+# 10txhO9qp6s3GJfQz85WqCpfxi7yBJI0htYk6PVhXVBuOolMVnA3YztkoRUsGPN4
+# g9WWoAPzZNr9wkAjdUUyYYleFTpyf/fBECdFP4M5xDHL/F+owxfxJqIVgUx0PTZl
+# QFI4+AgFazdbu9uL6ot9wMq0QCNA4Lv1rpDoMvuCISucFM/kVv1PXDtd1Y1cB6HP
+# hOJAGKwuZmWsWvTQhLO7uMhnjyhtXDXYL+lNtt+JC2+0pNbMxovfKBRkUzyBwXQz
+# xIFb5zIiwfSSmaNz8HLnhF399Ene27QaJiQakVW+2RYb+FInS4WN0B7jS5mrIw6Y
+# O8vb0UuKJjMZKC8Hin7ZpbQLNc265hYSACqoSrIRzVykZUXrvT+K4Z5IjUnoGG90
+# hi7FtBHKHsQYfK5FWMyUWFvlyxorNQq4i6c+Od3zTuib4ONRuwmPgjyfmy64BnAz
+# o+ZdvY54D7bR
 # SIG # End signature block
