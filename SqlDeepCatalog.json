@@ -4,6 +4,13 @@
   "releaseDate": "2024-11-02T00:00:00.000Z",
   "library": [
     {
+      "SqlDeepSynchronizerTools": [
+        {
+          "name": "SqlDeepSynchronizer.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/SqlDeepSynchronizer.ps1",
+          "description": "The SqlDeep Synchronizer powershell module."
+        }
+      ],
       "SqlDeepDatabase": [
         {
           "name": "SqlDeepDatabase.dacpac",
