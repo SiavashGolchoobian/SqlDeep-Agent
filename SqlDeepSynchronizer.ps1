@@ -13,8 +13,8 @@ param (
         SqlDeepCatalog
         SqlDeepDatabase
         SqlDeepPowershellTools
-        SqlDeepSynchronizerTools
         SqlDeepTsqlScript
+        SqlDeepSynchronizerTools
     }
     Class WebRepositoryItem {
         [SqlDeepRepositoryItemCategory]$Category
@@ -284,16 +284,21 @@ param (
         process{
             try {
                 if((Test-Path -Path $FilePath -PathType Leaf) -eq $true) {
-                    $null=Get-Content -Raw -Path $FilePath | ConvertFrom-Json | Select-Object -Property Category,FileName,Description | Sort-Object -Property Category,FileName | ForEach-Object{$myAnswer+=[RepositoryItem]::New($_.Category,$_.FileName,$_.Description)}
+                    $myCollection=Get-Content -Raw -Path $FilePath | ConvertFrom-Json 
+                    $null = $myCollection | Select-Object -Property Category,FileName,Description | Sort-Object -Property Category,FileName | ForEach-Object{$myAnswer+=([RepositoryItem]::New($_.Category,$_.FileName,$_.Description))}
                 }else{
                     $myAnswer=$null
                 }
             }catch{
                 $myAnswer=$null
+                Write-Error($_.ToString());
+                Throw;
             }
             return $myAnswer
         }
-        end{}
+        end{
+            Write-Host ($myAnswer.Count.ToString() + ' items detected in catalog file.')
+        }
     }
     function Publish-DatabaseDacPac {
         [OutputType([bool])]
@@ -374,7 +379,14 @@ param (
                             Write-Host ('Because of invalid signature this file was skipped.' )
                         } else {
                             #Get the file
-                            [Byte[]]$myFileContent = Get-Content -AsByteStream ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))
+                            [int]$myPowershellVersion=($PSVersionTable.PSVersion.Major)
+                            [Byte[]]$myFileContent = $null
+                            if ($myPowershellVersion -ge 7){
+                                $myFileContent=Get-Content -AsByteStream ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))
+                            }else{
+                                $myFileContent=Get-Content -Encoding Byte ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))
+                            }
+                            
                             $mySqlCommand.Parameters["@ItemName"].Value=($mySqlDeepRepositoryItem.FileName)
                             $mySqlCommand.Parameters["@ItemType"].Value=($myItemType)
                             $mySqlCommand.Parameters["@ItemVersion"].Value=[DBNull]::Value
@@ -496,36 +508,4 @@ if ($SyncScriptRepository) {
         Write-Host 'Catalog is empty.' -ForegroundColor Red
     }
 }
-# SIG # Begin signature block
-# MIIFngYJKoZIhvcNAQcCoIIFjzCCBYsCAQExDzANBglghkgBZQMEAgEFADB5Bgor
-# BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCj02IhHK5+4B7j
-# tu7otsfldt6XsWXSeyZLHgl3tfjEHaCCAxgwggMUMIIB/KADAgECAhAT2c9S4U98
-# jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
-# MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
-# ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
-# woiD7OBa8twT0nzHGNakwZtEzvq3HcL8bCgfDdp/0kpzoS6IKpjt2pyr0xGcXnTL
-# SvEtJ70XOgn179a1TlaRUly+ibuUfO15inrwPf1a6fqgvPMoXV6bMxpsbmx9vS6C
-# UBYO14GUN10GtlQgpUYY1N0czabC7yXfo8EwkO1ZTGoXADinHBF0poKffnR0EX5B
-# iL7/WGRfT3JgFZ8twYMoKOc4hJ+GZbudtAptvnWzAdiWM8UfwQwcH8SJQ7n5whPO
-# PV8e+aICbmgf9j8NcVAKUKqBiGLmEhKKjGKaUow53cTsshtGCndv5dnMgE2ppkxh
-# aWNn8qRqYdQFAgMBAAGjXjBcMA4GA1UdDwEB/wQEAwIHgDATBgNVHSUEDDAKBggr
-# BgEFBQcDAzAWBgNVHREEDzANggtzcWxkZWVwLmNvbTAdBgNVHQ4EFgQUwoHZNhYd
-# VvtzY5g9WlOViG86b8EwDQYJKoZIhvcNAQEFBQADggEBAAvLzZ9wWrupREYXkcex
-# oLBwbxjIHueaxluMmJs4MSvfyLG7mzjvkskf2AxfaMnWr//W+0KLhxZ0+itc/B4F
-# Ep4cLCZynBWa+iSCc8iCF0DczTjU1exG0mUff82e7c5mXs3oi6aOPRyy3XBjZqZd
-# YE1HWl9GYhboC5kY65Z42ZsbNyPOM8nhJNzBKq9V6eyNE2JnxlrQ1v19lxXOm6WW
-# Hgnh++tUf9k8DI1D7Da3bQqsj8O+ACHjhjMVzWKqAtnDxydaOOjRhKWIlHUQ7fLW
-# GYFZW2JXnogqxFR2tzdpZxsNgD4vHFzt1CspiHzhIsMwfQFxIg44Ny/U96l2aVpR
-# 6lUxggHcMIIB2AIBATAqMBYxFDASBgNVBAMMC3NxbGRlZXAuY29tAhAT2c9S4U98
-# jEh2eqrtOGKiMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAIoAKA
-# AKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIBCzEO
-# MAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIGEUVemRZeYJJjgM+OvBKkLJ
-# BRIAH57VXW6lPyY+MKMjMA0GCSqGSIb3DQEBAQUABIIBAJsVTwWyx7leoognENPr
-# W7rOU2zsbqHE0ECwhAnOIrsdbJJWJynJsipzoPCLIMu7CXZhVEuU3yYXuXW2rPh9
-# 7uJv6Yn5R8qAY7a/4yCVseEOJjosvhJ2qYquSTQ4plwiKenSqKxPorkaq5o9GSRc
-# WX4ax6NIXw/TvZ0QgsVoETX664N1GZC3JSQrY7t1wUTfoXE6K5TKo3fnJLLfWvyi
-# CXfvvtcwti9MbCrs1IIcUDrNheZPhY/ESyYSyUK/kflutQC1CMsl6q5+Ehmj8KqC
-# sMoKLmNRsIl1V6BAb64++s8Vy2V/DK0aaSYQiu+2oqOvYDkOAthbrBCwpfGVFtMC
-# AdU=
-# SIG # End signature block
+
