@@ -58,6 +58,9 @@ $myBashCommand+='sudo chown -R siavash ' + $SqlDeepDbDockerContainerPath2022 + '
 $myBashCommand+='cp ' + $SqlDeepDbDockerContainerPath2017 + '/SqlDeep2017.bak ' + $SqlDeepDbDockerHostHomePath +"`n"
 $myBashCommand+='cp ' + $SqlDeepDbDockerContainerPath2019 + '/SqlDeep2019.bak ' + $SqlDeepDbDockerHostHomePath +"`n"
 $myBashCommand+='cp ' + $SqlDeepDbDockerContainerPath2022 + '/SqlDeep2022.bak ' + $SqlDeepDbDockerHostHomePath +"`n"
+$myBashCommand+='sudo rm ' + $SqlDeepDbDockerContainerPath2017 + '/SqlDeep2017.bak ' +"`n"
+$myBashCommand+='sudo rm ' + $SqlDeepDbDockerContainerPath2019 + '/SqlDeep2019.bak ' +"`n"
+$myBashCommand+='sudo rm ' + $SqlDeepDbDockerContainerPath2022 + '/SqlDeep2022.bak ' +"`n"
 
 New-Item -Path $SqlDeepAssetBashScriptPath -Name 'sqldeepdownload' -Value $myBashCommand -Force -ItemType File
 scp.exe ($SqlDeepAssetBashScriptPath+'sqldeepdownload') siavash@172.18.3.49:$SqlDeepDbDockerHostHomePath
@@ -73,9 +76,9 @@ Write-Host 'Download backup file(s) from docker host'
 $myLinuxPath2017=($SqlDeepDbDockerHostHomePath+'SqlDeep2017.bak')
 $myLinuxPath2019=($SqlDeepDbDockerHostHomePath+'SqlDeep2019.bak')
 $myLinuxPath2022=($SqlDeepDbDockerHostHomePath+'SqlDeep2022.bak')
-$myLocalPath2017=$SqlDeepProjectPath+'Assets\Release\Latest\SqlDeep2017.bak'
-$myLocalPath2019=$SqlDeepProjectPath+'Assets\Release\Latest\SqlDeep2019.bak'
-$myLocalPath2022=$SqlDeepProjectPath+'Assets\Release\Latest\SqlDeep2022.bak'
+$myLocalPath2017=$SqlDeepProjectReleasePath+'\SqlDeep2017.bak'
+$myLocalPath2019=$SqlDeepProjectReleasePath+'\SqlDeep2019.bak'
+$myLocalPath2022=$SqlDeepProjectReleasePath+'\SqlDeep2022.bak'
 scp.exe siavash@172.18.3.49:$myLinuxPath2017 $myLocalPath2017
 scp.exe siavash@172.18.3.49:$myLinuxPath2019 $myLocalPath2019
 scp.exe siavash@172.18.3.49:$myLinuxPath2022 $myLocalPath2022
