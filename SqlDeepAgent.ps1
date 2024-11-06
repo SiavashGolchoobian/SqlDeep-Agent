@@ -364,8 +364,6 @@ param (
             {
                 if ($null -ne (Find-SqlPackageLocation)) {
                     if (Test-Path -Path $DacpacFilePath -PathType Leaf) {
-                        Write-Host ('Generate DatabaseDacPac report file ' + $DacpacFilePath+'.result') -ForegroundColor Green
-                        Get-PrePublishReport -DacpacFilePath $DacpacFilePath -ConnectionString $ConnectionString -ReportFilePath ($DacpacFilePath+'.report')
                         Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
                         $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
                         $myAnswer=$true
@@ -502,7 +500,10 @@ param (
                 if ($null -ne $myRepositoryItems){
                     Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
                     $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-                        Publish-DatabaseDacPac -DacpacFilePath ($_.FileName) -ConnectionString $ConnectionString
+                        Write-Host ('Generate DatabaseDacPac report file ' + $LocalRepositoryPath + '\' + $_.FileName + '.report') -ForegroundColor Green;
+                        Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath ($LocalRepositoryPath+'\'+$_.FileName+'.report');
+                        Write-Host ('Publish DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
+                        Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
                     }
                 }else{
                     Write-Host 'Catalog is empty.' -ForegroundColor Red
@@ -548,9 +549,12 @@ if ($SyncDatabaseModule) {
         $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
     }
     if ($null -ne $myRepositoryItems){
-        Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
+        Write-Host 'Generate Diff Report and Publish DatabaseDacPac ...' -ForegroundColor Green
         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-            Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString
+            Write-Host ('Generate DatabaseDacPac report file ' + $LocalRepositoryPath + '\' + $_.FileName + '.report') -ForegroundColor Green;
+            Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath ($LocalRepositoryPath+'\'+$_.FileName+'.report');
+            Write-Host ('Publish DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
+            Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
         }
     }else{
         Write-Host 'Catalog is empty.' -ForegroundColor Red
@@ -573,8 +577,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDt4p7gWcopr25p
-# 46uu76dNSJmFBwAIh1rf55mv3/Frw6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAl34HCDCPy7xnY
+# rVgQu2qVTJ4L/eXoQOkf8xm/hqQpe6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -696,28 +700,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCBcUgDe0JsOKN4PhBKdqv/s/4c73+B8HgCeBKHccq9J9zANBgkqhkiG9w0BAQEF
-# AASCAQAvEPY+y3i7TRFMGa/hwBjiwAAwqnREF6muyVrcwARdruhgd8FhC4ONzwIR
-# IWMt1mCAL3yDOuEkaC4MPAalc+RZT+fHakWOe9i9RrcC+gPo8MLbYChfbH/Ovl7Y
-# N8rrnGlG4wlB/SazmEY6gAdC4wbsPSbHthXqi1e5GsDA97KV98ev/YB33DUmewaD
-# 9/6d2HfhdpZbOBsk0oH6PvcH2qgbSLBzIY8fYHlzeToNoBGPZG0C0m66guZtNFPu
-# gZQ0uDwZgCXhHwT6Y4H+owet5bL1V1DI9bR9tvGRnxLvnLDdVmko2tL/cWoGeDVZ
-# ZtZXj1sPbLqeyt8+bztoE52a4I2OoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCCp0oA1j5C2UtDpRR+dxvhcO3ioQ+fOUU5+owZJyn38vDANBgkqhkiG9w0BAQEF
+# AASCAQAjxsse08r68VutB1U1BsfZOd8jvO9xr1omW1tBb0btsUzyubmy4NfoBGRI
+# 7VBiGgBtFDojAlA9nZ+DSyNtWDFAlrDr2kwlNC5pUpNdmFjPi9Z1TFyef7cys7dZ
+# LhZg3sOCj65sgQisBnggQpK8BMezyjgkK3Vp4IpoPSUCIK9uhSrjpXysr2+p4XVN
+# SOJYmkkCru34o5KT7+t/Ax74fso1G10YSCSzAp+aqrXo9wFPRAvA/fG5LNjKajMQ
+# /knverBAq01+uQy/0X5iNMtQtC5Al+v1BTh7lHASkLVDQNq1gj3SRzYepvaY4zdE
+# y/VR6owpZXjf7ScGsLlr81nL7QCjoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
 # CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTEwNjIy
-# MDkwOFowLwYJKoZIhvcNAQkEMSIEIL9ncpFMz9iYghZGnRgaNiaIJrCdElhix/9O
-# qW6lmUDnMA0GCSqGSIb3DQEBAQUABIICAJi7vjdbo8Adm4+PKPsooxJ3NQu3stQa
-# xrZBepPs1GKkAsi41Tzak9Ph/qa75CNrR/m4ZcaFnKpFhedmkgxm9AO+SEUA7Y6M
-# wHUl2sB8pZc5HH462IdncTeiz+NmA37/65aq0RGqiZnHpbdEbCoxG+JM6g3Bp+3j
-# TZnJ27xOBenKGVgSiYuqg+uypDEA/2u4ShFNGRZHxnXKy8xhruuSXh4A1MGoraKt
-# SF5iyOvfUCVzWpe8XOKT2zj/PgeLkQDQCgTM2aHJtFLKuphFKoq35gQke3reJkat
-# GJ46xk9AA8NJdOwQ6Ek+1bhg1xGYzzbI9e5OnVM9BszhT3S3/gtx6NoxL4KAyC13
-# YjgVzq8An4vpRC2k9M7+HM2lvgrAqJ7bupO8a9I9LDpKDoGpCQZZlcDEPw5X+1ql
-# ngSlaNvmbRPeODX6APky117cwhf7cqW1rU4m0YpnNIG/huwVt1VeYWfCOiUVwjGk
-# 3RJoeDZFxIEjfJX3iSUku+ggZWmptRLQ+knbRnYTKP0YEM5Wr4fwMhOk+I6zVzlc
-# T+F7+/SfUNvR3+/KVK3qhEgHVya9RvZNk41yrR3Pa3iiz9fs7zmtnurfWb9q4Vr+
-# tFaRbzS2mD+Py7PCs4RqBhJANYACcg+2OVUJcDUFJ0mn1kVNnD2lF3c/E59yH/bb
-# 8ZfQKlnbPYMD
+# NDYxMlowLwYJKoZIhvcNAQkEMSIEIIwR+pC4RPyYEZ5w7udHD4ciCHHs1znPrmN4
+# 95QP769hMA0GCSqGSIb3DQEBAQUABIICAEEcAYP2fBSsW199CrlYL4fhedy+j0Q6
+# wmczYk91B8SXh2tB0ltR1RYGrcULrhilyZblXebtSNKQF5Pc3l9KevIIM6sQNruu
+# 54u222Qfcg13GZDs+tndvX5B2+17EKSOsxJPh3t9vs0rltYzEeqsaDSduGgYis2o
+# M/1XBosXbAH2hLeBzgeJoS95hCpEG/JX50pS1Ca2HImAT9jkYujVoGlfxG3xZKtP
+# M2baeHj+/LI0ehOtA9EN2mjb0FdiltLW6IBMLHt56ZIdv4QBZ/6o0O4tI99e0dio
+# TzXntQRIlUNmovQCsFgmvNxhNhcjBYNJIPoZK4/2Cmhs1JDU8/m+D87M51M5TBAe
+# RYJrT2m4lbtiBF6ZYP4m5G1KBSpG+7zWxpgjnb9M+hgEGsO4/Xj8ePdPFK9h4W5A
+# +tlTbHWWK4Vv3CfFKHwQVDPlmHeARFdC8gq5WVI63PHWCnAbQw5GtOwoC8K+n1WD
+# xRDn7/DZbI/BEBiq4bZ9RQf7+HardUDbwKegkZ8Jbv8G3Ku/D8ixoGN8RdD7ML9O
+# tCYqsvDIc1YqkET0plPnLQ1+Mep1H15uPumRtZ9bMrU2/ahM0vZaT14Wgn5D2i23
+# /+w+FzAqprE5IUhw8ckxLSyTyagjepyfVwawHSdq6Ccz8rAf0JikwWbvfSp+XcBy
+# qKV5389o/Y/H
 # SIG # End signature block
