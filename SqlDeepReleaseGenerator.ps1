@@ -1,4 +1,4 @@
-Using module 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Database-Shipping\SqlDeepDatabasePublisher.psm1'
+Using module 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-PowershellTools\SqlDeepDatabasePublisher.psm1'
 
 $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
 [string]$SqlDeepDbConnectionString2017='Data Source=172.18.3.49,2017;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=P@$$W0RD'
@@ -9,7 +9,7 @@ $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Wh
 [string]$SqlDeepDbDockerContainerPath2019= '/var/opt/mssql/2019/backup/sqldeep'
 [string]$SqlDeepDbDockerContainerPath2022= '/var/opt/mssql/2022/backup/sqldeep'
 [string]$SqlDeepProjectReleasePath='D:\Siavash\TFS\sqldeep\Assets\Release\Latest'
-[string]$SqlDeepPowershellToolsProjectPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Database-Shipping\'
+[string]$SqlDeepPowershellToolsProjectPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-PowershellTools\'
 [string]$SqlDeepSynchronizerProjectPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\'
 [string]$SqlDeepAssetBashScriptPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\Assets\Bash\'
 
