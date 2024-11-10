@@ -19,7 +19,7 @@ $chkSyncDatabaseModule_CheckedChanged = {
 $btnSync_Click = {
     $Main.Cursor=[System.Windows.Forms.Cursors]::WaitCursor
     [string[]]$myConnections=$null;
-    $myConnections=$txtConnectionString.Text.Replace("`r","").Split("`n", [StringSplitOptions]::RemoveEmptyEntries)
+    $myConnections=$txtConnectionString.Text.Replace("`r","").Split("`n", [StringSplitOptions]::RemoveEmptyEntries) | Where-Object {$_ -notlike "--*"}
     
     if ($chkDownloadAssets.Checked){
         #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text)

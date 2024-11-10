@@ -16,6 +16,7 @@ $Main = New-Object -TypeName System.Windows.Forms.Form
 [System.Windows.Forms.Button]$btnLoadConfig = $null
 [System.Windows.Forms.SaveFileDialog]$dlgSaveFile = $null
 [System.Windows.Forms.OpenFileDialog]$dlgFileBrowser = $null
+[System.Windows.Forms.Label]$Label2 = $null
 function InitializeComponent
 {
 $resources = . (Join-Path $PSScriptRoot 'sqldeepagentgui.resources.ps1')
@@ -36,6 +37,7 @@ $btnSaveConfig = (New-Object -TypeName System.Windows.Forms.Button)
 $btnLoadConfig = (New-Object -TypeName System.Windows.Forms.Button)
 $dlgSaveFile = (New-Object -TypeName System.Windows.Forms.SaveFileDialog)
 $dlgFileBrowser = (New-Object -TypeName System.Windows.Forms.OpenFileDialog)
+$Label2 = (New-Object -TypeName System.Windows.Forms.Label)
 $Main.SuspendLayout()
 #
 #lblLocalRepositoryPath
@@ -189,11 +191,23 @@ $dlgFileBrowser.DefaultExt = [System.String]'cfg'
 $dlgFileBrowser.FileName = [System.String]'SqlDeep.cfg'
 $dlgFileBrowser.Filter = [System.String]'Config files|*.cfg'
 #
+#Label2
+#
+$Label2.ForeColor = [System.Drawing.Color]::Navy
+$Label2.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]60))
+$Label2.Name = [System.String]'Label2'
+$Label2.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]57))
+$Label2.TabIndex = [System.Int32]12
+$Label2.Text = [System.String]'You can comment connection 
+string(s) by adding -- in front 
+of each line.'
+#
 #Main
 #
 $Main.AcceptButton = $btnSync
 $Main.CancelButton = $btnExit
 $Main.ClientSize = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]511,[System.Int32]231))
+$Main.Controls.Add($Label2)
 $Main.Controls.Add($btnLoadConfig)
 $Main.Controls.Add($btnSaveConfig)
 $Main.Controls.Add($btnExit)
@@ -232,5 +246,6 @@ Add-Member -InputObject $Main -Name btnSaveConfig -Value $btnSaveConfig -MemberT
 Add-Member -InputObject $Main -Name btnLoadConfig -Value $btnLoadConfig -MemberType NoteProperty
 Add-Member -InputObject $Main -Name dlgSaveFile -Value $dlgSaveFile -MemberType NoteProperty
 Add-Member -InputObject $Main -Name dlgFileBrowser -Value $dlgFileBrowser -MemberType NoteProperty
+Add-Member -InputObject $Main -Name Label2 -Value $Label2 -MemberType NoteProperty
 }
 . InitializeComponent
