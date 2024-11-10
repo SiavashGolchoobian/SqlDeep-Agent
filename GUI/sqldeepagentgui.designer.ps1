@@ -12,6 +12,10 @@ $Main = New-Object -TypeName System.Windows.Forms.Form
 [System.Windows.Forms.Button]$btnBrowse = $null
 [System.Windows.Forms.FolderBrowserDialog]$dlgFolderBrowser = $null
 [System.Windows.Forms.Button]$btnExit = $null
+[System.Windows.Forms.Button]$btnSaveConfig = $null
+[System.Windows.Forms.Button]$btnLoadConfig = $null
+[System.Windows.Forms.SaveFileDialog]$dlgSaveFile = $null
+[System.Windows.Forms.OpenFileDialog]$dlgFileBrowser = $null
 function InitializeComponent
 {
 $resources = . (Join-Path $PSScriptRoot 'sqldeepagentgui.resources.ps1')
@@ -28,6 +32,10 @@ $btnSync = (New-Object -TypeName System.Windows.Forms.Button)
 $btnBrowse = (New-Object -TypeName System.Windows.Forms.Button)
 $dlgFolderBrowser = (New-Object -TypeName System.Windows.Forms.FolderBrowserDialog)
 $btnExit = (New-Object -TypeName System.Windows.Forms.Button)
+$btnSaveConfig = (New-Object -TypeName System.Windows.Forms.Button)
+$btnLoadConfig = (New-Object -TypeName System.Windows.Forms.Button)
+$dlgSaveFile = (New-Object -TypeName System.Windows.Forms.SaveFileDialog)
+$dlgFileBrowser = (New-Object -TypeName System.Windows.Forms.OpenFileDialog)
 $Main.SuspendLayout()
 #
 #lblLocalRepositoryPath
@@ -52,20 +60,24 @@ $lblConnectionString.Location = (New-Object -TypeName System.Drawing.Point -Argu
 $lblConnectionString.Name = [System.String]'lblConnectionString'
 $lblConnectionString.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]23))
 $lblConnectionString.TabIndex = [System.Int32]2
-$lblConnectionString.Text = [System.String]'Connection string:'
+$lblConnectionString.Text = [System.String]'Connection string(s):'
 #
 #txtConnectionString
 #
+$txtConnectionString.AcceptsReturn = $true
 $txtConnectionString.Enabled = $false
 $txtConnectionString.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]34))
+$txtConnectionString.Multiline = $true
 $txtConnectionString.Name = [System.String]'txtConnectionString'
-$txtConnectionString.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]294,[System.Int32]21))
+$txtConnectionString.ScrollBars = [System.Windows.Forms.ScrollBars]::Both
+$txtConnectionString.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]323,[System.Int32]83))
 $txtConnectionString.TabIndex = [System.Int32]3
-$txtConnectionString.Text = [System.String]'Data Source=localhost;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=P@$$W0rd'
+$txtConnectionString.Text = [System.String]$resources.'txtConnectionString.Text'
+$txtConnectionString.WordWrap = $false
 #
 #Label1
 #
-$Label1.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]69))
+$Label1.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]126))
 $Label1.Name = [System.String]'Label1'
 $Label1.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]23))
 $Label1.TabIndex = [System.Int32]4
@@ -74,17 +86,17 @@ $Label1.Text = [System.String]'Repository catalog file name:'
 #txtSqlDeepRepositoryItemFileName
 #
 $txtSqlDeepRepositoryItemFileName.Enabled = $false
-$txtSqlDeepRepositoryItemFileName.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]66))
+$txtSqlDeepRepositoryItemFileName.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]123))
 $txtSqlDeepRepositoryItemFileName.Name = [System.String]'txtSqlDeepRepositoryItemFileName'
-$txtSqlDeepRepositoryItemFileName.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]294,[System.Int32]21))
+$txtSqlDeepRepositoryItemFileName.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]323,[System.Int32]21))
 $txtSqlDeepRepositoryItemFileName.TabIndex = [System.Int32]4
 $txtSqlDeepRepositoryItemFileName.Text = [System.String]'SqlDeepCatalog.json.result'
 #
 #chkDownloadAssets
 #
-$chkDownloadAssets.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]95))
+$chkDownloadAssets.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]159))
 $chkDownloadAssets.Name = [System.String]'chkDownloadAssets'
-$chkDownloadAssets.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]458,[System.Int32]24))
+$chkDownloadAssets.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
 $chkDownloadAssets.TabIndex = [System.Int32]5
 $chkDownloadAssets.Text = [System.String]'Download Assets'
 $chkDownloadAssets.UseVisualStyleBackColor = $true
@@ -92,9 +104,9 @@ $chkDownloadAssets.add_CheckedChanged($chkDownloadAssets_CheckedChanged)
 #
 #chkSyncDatabaseModule
 #
-$chkSyncDatabaseModule.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]125))
+$chkSyncDatabaseModule.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]159))
 $chkSyncDatabaseModule.Name = [System.String]'chkSyncDatabaseModule'
-$chkSyncDatabaseModule.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]458,[System.Int32]24))
+$chkSyncDatabaseModule.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
 $chkSyncDatabaseModule.TabIndex = [System.Int32]6
 $chkSyncDatabaseModule.Text = [System.String]'Sync Database Module'
 $chkSyncDatabaseModule.UseVisualStyleBackColor = $true
@@ -102,9 +114,9 @@ $chkSyncDatabaseModule.add_CheckedChanged($chkSyncDatabaseModule_CheckedChanged)
 #
 #chkSyncScriptRepository
 #
-$chkSyncScriptRepository.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]155))
+$chkSyncScriptRepository.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]346,[System.Int32]159))
 $chkSyncScriptRepository.Name = [System.String]'chkSyncScriptRepository'
-$chkSyncScriptRepository.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]458,[System.Int32]24))
+$chkSyncScriptRepository.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
 $chkSyncScriptRepository.TabIndex = [System.Int32]7
 $chkSyncScriptRepository.Text = [System.String]'Sync Script Repository'
 $chkSyncScriptRepository.UseVisualStyleBackColor = $true
@@ -114,9 +126,9 @@ $chkSyncScriptRepository.add_CheckedChanged($chkSyncScriptRepository_CheckedChan
 #
 $btnSync.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]196))
 $btnSync.Name = [System.String]'btnSync'
-$btnSync.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]75,[System.Int32]23))
+$btnSync.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]95,[System.Int32]23))
 $btnSync.TabIndex = [System.Int32]8
-$btnSync.Text = [System.String]'&Synchronize'
+$btnSync.Text = [System.String]'S&ynchronize'
 $btnSync.UseVisualStyleBackColor = $true
 $btnSync.add_Click($btnSync_Click)
 #
@@ -137,18 +149,53 @@ $dlgFolderBrowser.RootFolder = [System.Environment+SpecialFolder]::MyComputer
 #btnExit
 #
 $btnExit.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
-$btnExit.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]424,[System.Int32]196))
+$btnExit.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]409,[System.Int32]196))
 $btnExit.Name = [System.String]'btnExit'
-$btnExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]75,[System.Int32]23))
-$btnExit.TabIndex = [System.Int32]9
+$btnExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]95,[System.Int32]23))
+$btnExit.TabIndex = [System.Int32]11
 $btnExit.Text = [System.String]'E&xit'
 $btnExit.UseVisualStyleBackColor = $true
+#
+#btnSaveConfig
+#
+$btnSaveConfig.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]113,[System.Int32]196))
+$btnSaveConfig.Name = [System.String]'btnSaveConfig'
+$btnSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]95,[System.Int32]23))
+$btnSaveConfig.TabIndex = [System.Int32]9
+$btnSaveConfig.Text = [System.String]'&Save config ...'
+$btnSaveConfig.UseVisualStyleBackColor = $true
+$btnSaveConfig.add_Click($btnSaveConfig_Click)
+#
+#btnLoadConfig
+#
+$btnLoadConfig.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]214,[System.Int32]196))
+$btnLoadConfig.Name = [System.String]'btnLoadConfig'
+$btnLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]95,[System.Int32]23))
+$btnLoadConfig.TabIndex = [System.Int32]10
+$btnLoadConfig.Text = [System.String]'&Load config...'
+$btnLoadConfig.UseVisualStyleBackColor = $true
+$btnLoadConfig.add_Click($btnLoadConfig_Click)
+#
+#dlgSaveFile
+#
+$dlgSaveFile.DefaultExt = [System.String]'cfg'
+$dlgSaveFile.FileName = [System.String]'SqlDeep.cfg'
+$dlgSaveFile.Filter = [System.String]'Config files|*.cfg'
+$dlgSaveFile.SupportMultiDottedExtensions = $true
+#
+#dlgFileBrowser
+#
+$dlgFileBrowser.DefaultExt = [System.String]'cfg'
+$dlgFileBrowser.FileName = [System.String]'SqlDeep.cfg'
+$dlgFileBrowser.Filter = [System.String]'Config files|*.cfg'
 #
 #Main
 #
 $Main.AcceptButton = $btnSync
 $Main.CancelButton = $btnExit
 $Main.ClientSize = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]511,[System.Int32]231))
+$Main.Controls.Add($btnLoadConfig)
+$Main.Controls.Add($btnSaveConfig)
 $Main.Controls.Add($btnExit)
 $Main.Controls.Add($btnBrowse)
 $Main.Controls.Add($btnSync)
@@ -161,7 +208,7 @@ $Main.Controls.Add($txtConnectionString)
 $Main.Controls.Add($lblConnectionString)
 $Main.Controls.Add($txtLocalRepositoryPath)
 $Main.Controls.Add($lblLocalRepositoryPath)
-$Main.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
+$Main.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedDialog
 $Main.Icon = ([System.Drawing.Icon]$resources.'$this.Icon')
 $Main.MaximizeBox = $false
 $Main.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
@@ -181,5 +228,9 @@ Add-Member -InputObject $Main -Name btnSync -Value $btnSync -MemberType NoteProp
 Add-Member -InputObject $Main -Name btnBrowse -Value $btnBrowse -MemberType NoteProperty
 Add-Member -InputObject $Main -Name dlgFolderBrowser -Value $dlgFolderBrowser -MemberType NoteProperty
 Add-Member -InputObject $Main -Name btnExit -Value $btnExit -MemberType NoteProperty
+Add-Member -InputObject $Main -Name btnSaveConfig -Value $btnSaveConfig -MemberType NoteProperty
+Add-Member -InputObject $Main -Name btnLoadConfig -Value $btnLoadConfig -MemberType NoteProperty
+Add-Member -InputObject $Main -Name dlgSaveFile -Value $dlgSaveFile -MemberType NoteProperty
+Add-Member -InputObject $Main -Name dlgFileBrowser -Value $dlgFileBrowser -MemberType NoteProperty
 }
 . InitializeComponent
