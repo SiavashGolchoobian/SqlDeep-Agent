@@ -248,15 +248,17 @@ Add-Member -InputObject $Main -Name btnExit -Value $btnExit -MemberType NoteProp
 }
 . InitializeComponent
 
-# [CmdletBinding(DefaultParameterSetName = 'SYNC_ONLINE')]
-# param (
-#     [Parameter(Mandatory=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
-#     [Parameter(Mandatory=$false,HelpMessage="Target database connection string",ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][ValidateNotNullOrEmpty()][string]$ConnectionString,
-#     [Parameter(Mandatory=$true,HelpMessage="SqlDeep RepositoryItems file path",ParameterSetName = 'SYNC_OFFLINE')]$SqlDeepRepositoryItemsFileName,
-#     [Parameter(Mandatory=$false,ParameterSetName = 'DOWNLOAD')][Parameter(ParameterSetName = 'SYNC_ONLINE')][Switch]$DownloadAssets,
-#     [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncDatabaseModule,
-#     [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncScriptRepository
-# )
+<#SqlDeep-Comment
+[CmdletBinding(DefaultParameterSetName = 'SYNC_ONLINE')]
+param (
+    [Parameter(Mandatory=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
+    [Parameter(Mandatory=$false,HelpMessage="Target database connection string",ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][ValidateNotNullOrEmpty()][string]$ConnectionString,
+    [Parameter(Mandatory=$true,HelpMessage="SqlDeep RepositoryItems file path",ParameterSetName = 'SYNC_OFFLINE')]$SqlDeepRepositoryItemsFileName,
+    [Parameter(Mandatory=$false,ParameterSetName = 'DOWNLOAD')][Parameter(ParameterSetName = 'SYNC_ONLINE')][Switch]$DownloadAssets,
+    [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncDatabaseModule,
+    [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncScriptRepository
+)
+SqlDeep-Comment#>
 
 #region Functions
     enum SqlDeepRepositoryItemCategory {
@@ -784,50 +786,52 @@ Add-Member -InputObject $Main -Name btnExit -Value $btnExit -MemberType NoteProp
     }
 #endregion
 
+<#SqlDeep-Comment
 #region Export
-#Export-ModuleMember -Function Sync-SqlDeep
+Export-ModuleMember -Function Sync-SqlDeep
 #endregion
 
-# #---------MAIN
-# if ($LocalRepositoryPath[-1] -eq '\'){
-#     $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
-# }
-# [RepositoryItem[]]$myRepositoryItems=$null
-# if ($DownloadAssets) {
-#     Write-Host 'Download ...' -ForegroundColor Green
-#     $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
-# }
-# if ($SyncDatabaseModule) {
-#     Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
-#     if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-#         Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
-#         $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
-#     }
-#     if ($null -ne $myRepositoryItems){
-#         Write-Host 'Generate Diff Report and Publish DatabaseDacPac ...' -ForegroundColor Green
-#         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-#             Write-Host ('Generate DatabaseDacPac report file ' + $LocalRepositoryPath + '\' + $_.FileName + '.report') -ForegroundColor Green;
-#             Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath ($LocalRepositoryPath+'\'+$_.FileName+'.report');
-#             Write-Host ('Publish DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
-#             Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
-#         }
-#     }else{
-#         Write-Host 'Catalog is empty.' -ForegroundColor Red
-#     }
-# }
-# if ($SyncScriptRepository) {
-#     Write-Host 'SyncScriptRepository ...' -ForegroundColor Green
-#     if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-#         Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
-#         $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
-#     }
-#     if ($null -ne $myRepositoryItems){
-#         Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
-#         Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
-#     }else{
-#         Write-Host 'Catalog is empty.' -ForegroundColor Red
-#     }
-# }
+#---------MAIN
+if ($LocalRepositoryPath[-1] -eq '\'){
+    $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
+}
+[RepositoryItem[]]$myRepositoryItems=$null
+if ($DownloadAssets) {
+    Write-Host 'Download ...' -ForegroundColor Green
+    $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
+}
+if ($SyncDatabaseModule) {
+    Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
+    if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
+        Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+        $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
+    }
+    if ($null -ne $myRepositoryItems){
+        Write-Host 'Generate Diff Report and Publish DatabaseDacPac ...' -ForegroundColor Green
+        $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+            Write-Host ('Generate DatabaseDacPac report file ' + $LocalRepositoryPath + '\' + $_.FileName + '.report') -ForegroundColor Green;
+            Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath ($LocalRepositoryPath+'\'+$_.FileName+'.report');
+            Write-Host ('Publish DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
+            Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
+        }
+    }else{
+        Write-Host 'Catalog is empty.' -ForegroundColor Red
+    }
+}
+if ($SyncScriptRepository) {
+    Write-Host 'SyncScriptRepository ...' -ForegroundColor Green
+    if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
+        Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+        $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
+    }
+    if ($null -ne $myRepositoryItems){
+        Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
+        Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
+    }else{
+        Write-Host 'Catalog is empty.' -ForegroundColor Red
+    }
+}
+SqlDeep-Comment#>
 
 
 
