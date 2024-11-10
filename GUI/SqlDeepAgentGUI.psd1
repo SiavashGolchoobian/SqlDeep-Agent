@@ -1,6 +1,6 @@
 @{
-    Root = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\GUI\SqlDeepAgentGUI.ps1'
-    OutputPath = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\GUI\SqlDeepAgentGUIBundle.ps1'
+    Root = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\GUI\Out\SqlDeepAgentGUI.ps1'
+    OutputPath = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\GUI\Out'
     #OutputPath = 'D:\Out'
     Package = @{
         Enabled = $true

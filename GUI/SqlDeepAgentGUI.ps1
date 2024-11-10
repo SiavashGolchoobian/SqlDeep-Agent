@@ -41,5 +41,5 @@ function Set-Controls(){
 
 Add-Type -AssemblyName System.Windows.Forms
 . (Join-Path $PSScriptRoot 'sqldeepagentgui.designer.ps1')
-. (Join-Path ($PSScriptRoot.Substring(0,$PSScriptRoot.LastIndexOf('\'))+'\CLI\') 'SqlDeepAgent.psm1')
+. (Join-Path $PSScriptRoot 'SqlDeepAgent.psm1')
 $Main.ShowDialog()
