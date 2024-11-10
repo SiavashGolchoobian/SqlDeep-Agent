@@ -22,3 +22,4 @@ Merge-Script -Script ..\GUI\SqlDeepAgentGUI.ps1 -Bundle -OutputPath ..\GUI\Out -
 Write-Host 'SqlAgent bundle file is created'
 Merge-Script -ConfigFile ..\GUI\SqlDeepAgentGUI.psd1 -Verbose -Debug
 Write-Host 'SqlAgent exe file is created'
+if (Test-Path ..\GUI\Out\SqlDeepAgentGUI.exe -PathType Leaf) {Move-Item ..\GUI\Out\SqlDeepAgentGUI.exe ..\GUI ;Write-Host 'exe file was moved'}
