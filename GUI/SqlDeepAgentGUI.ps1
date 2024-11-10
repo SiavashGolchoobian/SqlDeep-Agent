@@ -1,23 +1,27 @@
 $chkDownloadAssets_CheckedChanged = {
 }
 $chkSyncScriptRepository_CheckedChanged = {
-    Check-Controls
+    Set-Controls
 }
 $chkSyncDatabaseModule_CheckedChanged = {
-    Check-Controls
+    Set-Controls
 }
 
 $btnSync_Click = {
-    Write-Host $PSScriptRoot
+    $Main.Cursor=[System.Windows.Forms.Cursors]::WaitCursor
     if ($chkDownloadAssets.Checked){
-        . $PSScriptRoot\..\SqlDeepAgent.ps1 -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text)
+        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text)
+        Sync-SqlDeep -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text)
     }
     if ($chkSyncDatabaseModule.Checked){
-        . $PSScriptRoot\..\SqlDeepAgent.ps1 -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+        Sync-SqlDeep -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
     }
     if ($chkSyncScriptRepository.Checked){
-        . $PSScriptRoot\..\SqlDeepAgent.ps1 -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+        Sync-SqlDeep  -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
     }
+    $Main.Cursor=[System.Windows.Forms.Cursors]::Default
 }
 
 $btnBrowse_Click = {
@@ -25,7 +29,7 @@ $btnBrowse_Click = {
     $txtLocalRepositoryPath.Text=$dlgFolderBrowser.SelectedPath
 }
 
-function Check-Controls(){
+function Set-Controls(){
     if ($chkSyncDatabaseModule.Checked -eq $true -or $chkSyncScriptRepository.Checked -eq $true){
         $txtConnectionString.Enabled=$true
         $txtSqlDeepRepositoryItemFileName.Enabled=$true
@@ -37,4 +41,5 @@ function Check-Controls(){
 
 Add-Type -AssemblyName System.Windows.Forms
 . (Join-Path $PSScriptRoot 'sqldeepagentgui.designer.ps1')
+. (Join-Path ($PSScriptRoot.Substring(0,$PSScriptRoot.LastIndexOf('\'))+'\CLI\') 'SqlDeepAgent.psm1')
 $Main.ShowDialog()

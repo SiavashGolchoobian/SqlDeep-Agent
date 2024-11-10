@@ -11,6 +11,7 @@ $Main = New-Object -TypeName System.Windows.Forms.Form
 [System.Windows.Forms.Button]$btnSync = $null
 [System.Windows.Forms.Button]$btnBrowse = $null
 [System.Windows.Forms.FolderBrowserDialog]$dlgFolderBrowser = $null
+[System.Windows.Forms.Button]$btnExit = $null
 function InitializeComponent
 {
 $resources = . (Join-Path $PSScriptRoot 'sqldeepagentgui.resources.ps1')
@@ -26,6 +27,7 @@ $chkSyncScriptRepository = (New-Object -TypeName System.Windows.Forms.CheckBox)
 $btnSync = (New-Object -TypeName System.Windows.Forms.Button)
 $btnBrowse = (New-Object -TypeName System.Windows.Forms.Button)
 $dlgFolderBrowser = (New-Object -TypeName System.Windows.Forms.FolderBrowserDialog)
+$btnExit = (New-Object -TypeName System.Windows.Forms.Button)
 $Main.SuspendLayout()
 #
 #lblLocalRepositoryPath
@@ -132,9 +134,22 @@ $btnBrowse.add_Click($btnBrowse_Click)
 #
 $dlgFolderBrowser.RootFolder = [System.Environment+SpecialFolder]::MyComputer
 #
+#btnExit
+#
+$btnExit.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
+$btnExit.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]424,[System.Int32]196))
+$btnExit.Name = [System.String]'btnExit'
+$btnExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]75,[System.Int32]23))
+$btnExit.TabIndex = [System.Int32]9
+$btnExit.Text = [System.String]'E&xit'
+$btnExit.UseVisualStyleBackColor = $true
+#
 #Main
 #
+$Main.AcceptButton = $btnSync
+$Main.CancelButton = $btnExit
 $Main.ClientSize = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]511,[System.Int32]231))
+$Main.Controls.Add($btnExit)
 $Main.Controls.Add($btnBrowse)
 $Main.Controls.Add($btnSync)
 $Main.Controls.Add($chkSyncScriptRepository)
@@ -146,6 +161,7 @@ $Main.Controls.Add($txtConnectionString)
 $Main.Controls.Add($lblConnectionString)
 $Main.Controls.Add($txtLocalRepositoryPath)
 $Main.Controls.Add($lblLocalRepositoryPath)
+$Main.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::FixedSingle
 $Main.Icon = ([System.Drawing.Icon]$resources.'$this.Icon')
 $Main.MaximizeBox = $false
 $Main.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
@@ -164,5 +180,6 @@ Add-Member -InputObject $Main -Name chkSyncScriptRepository -Value $chkSyncScrip
 Add-Member -InputObject $Main -Name btnSync -Value $btnSync -MemberType NoteProperty
 Add-Member -InputObject $Main -Name btnBrowse -Value $btnBrowse -MemberType NoteProperty
 Add-Member -InputObject $Main -Name dlgFolderBrowser -Value $dlgFolderBrowser -MemberType NoteProperty
+Add-Member -InputObject $Main -Name btnExit -Value $btnExit -MemberType NoteProperty
 }
 . InitializeComponent
