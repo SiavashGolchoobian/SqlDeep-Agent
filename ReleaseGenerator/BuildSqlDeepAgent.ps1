@@ -15,11 +15,18 @@ function Remove-AuthenticodeSignature {
     $newContent = $fileContent[0..$lineNumber]
     $newContent | Set-Content $Path
 }
-if (Test-Path ..\GUI\bin\ -PathType Container) {Remove-Item ..\GUI\Out\ -Recurse -Force;Write-Host 'out folder was removed'}
-if (Test-Path ..\GUI\SqlDeepAgentGUI.exe -PathType Leaf) {Remove-Item ..\GUI\SqlDeepAgentGUI.exe;Write-Host 'exe file was removed'}
-if (Test-Path ..\CLI\SqlDeepAgent.psm1 -PathType Leaf) {Remove-AuthenticodeSignature -Path ..\CLI\SqlDeepAgent.psm1;Write-Host 'signature content was removed'}
-Merge-Script -Script ..\GUI\SqlDeepAgentGUI.ps1 -Bundle -OutputPath ..\GUI\Out -Verbose
+$myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
+$myFolderPhrase='SqlDeep-Synchronizer'
+$myBasePath=(Get-Location).Path
+$myBasePath=$myBasePath.Substring(0,$myBasePath.LastIndexOf($myFolderPhrase)+$myFolderPhrase.Length)
+if (Test-Path $myBasePath\GUI\bin\ -PathType Container) {Remove-Item $myBasePath\GUI\Out\ -Recurse -Force;Write-Host 'out folder was removed'}
+if (Test-Path $myBasePath\GUI\SqlDeepAgentGUI.exe -PathType Leaf) {Remove-Item $myBasePath\GUI\SqlDeepAgentGUI.exe;Write-Host 'exe file was removed'}
+if (Test-Path $myBasePath\CLI\SqlDeepAgent.psm1 -PathType Leaf) {Remove-AuthenticodeSignature -Path $myBasePath\CLI\SqlDeepAgent.psm1;Write-Host 'signature content was removed'}
+Merge-Script -Script $myBasePath\GUI\SqlDeepAgentGUI.ps1 -Bundle -OutputPath $myBasePath\GUI\Out -Verbose
 Write-Host 'SqlAgent bundle file is created'
-Merge-Script -ConfigFile ..\GUI\SqlDeepAgentGUI.psd1 -Verbose -Debug
+Merge-Script -ConfigFile $myBasePath\GUI\SqlDeepAgentGUI.psd1 -Verbose -Debug
 Write-Host 'SqlAgent exe file is created'
-if (Test-Path ..\GUI\Out\SqlDeepAgentGUI.exe -PathType Leaf) {Move-Item ..\GUI\Out\SqlDeepAgentGUI.exe ..\GUI ;Write-Host 'exe file was moved'}
+if (Test-Path $myBasePath\GUI\Out\SqlDeepAgentGUI.exe -PathType Leaf) {Move-Item $myBasePath\GUI\Out\SqlDeepAgentGUI.exe $myBasePath\GUI ;Write-Host 'exe file was moved'}
+if ((Get-AuthenticodeSignature -FilePath $myBasePath\CLI\SqlDeepAgent.psm1).Status -eq 'HashMismatch'){
+    Set-AuthenticodeSignature -FilePath  $myBasePath\CLI\SqlDeepAgent.psm1 -Certificate $myCertificate -IncludeChain All -TimeStampServer http://timestamp.digicert.com
+}

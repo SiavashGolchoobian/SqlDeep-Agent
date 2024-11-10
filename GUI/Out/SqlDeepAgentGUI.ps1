@@ -322,7 +322,7 @@ Add-Member -InputObject $Main -Name btnExit -Value $btnExit -MemberType NoteProp
         return $FolderPath
     }
     end{}    
-}
+    }
     function Download-File {
         [OutputType([bool])]
         param (
@@ -485,7 +485,7 @@ Add-Member -InputObject $Main -Name btnExit -Value $btnExit -MemberType NoteProp
             [WebRepositoryItem]$myWebRepositoryItem=$null;
             [RepositoryItem[]]$myAnswer=$null;
             #===============Constants
-            $mySqlDeepOfficialCatalogURI='https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/SqlDeepCatalog.json'
+            $mySqlDeepOfficialCatalogURI='https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Assets/SqlDeepCatalog.json'
             $mySqlDeepOfficialCatalogFilename=$mySqlDeepOfficialCatalogURI.Split('/')[-1]
             if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
             $myLocalRepositoryArchivePath=$LocalRepositoryPath+'\Archive\'+(Get-Date -Format "yyyyMMdd_HHmmss").ToString()
