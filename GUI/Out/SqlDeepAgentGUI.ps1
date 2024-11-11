@@ -66,8 +66,8 @@ function Set-Controls(){
 }
 function Save-Config(){
     $Main.dlgSaveFile.Title='Save config to a file'
-    $Main.dlgSaveFile.ShowDialog()
-    if ($Main.dlgSaveFile.FileOk){
+    $myResult=$Main.dlgSaveFile.ShowDialog()
+    if ($myResult -eq [System.Windows.Forms.DialogResult]::OK){
         [string]$FilePath=$dlgSaveFile.FileName
         [hashtable]$mySettings=@{
                 LocalRepositoryPath=$txtLocalRepositoryPath.Text;
@@ -79,8 +79,8 @@ function Save-Config(){
 }
 function Load-Config(){
     $Main.dlgFileBrowser.Title='Load config file'
-    $Main.dlgFileBrowser.ShowDialog()
-    if ($Main.dlgFileBrowser.FileOk) {
+    $myResult=$Main.dlgFileBrowser.ShowDialog()
+    if ($myResult -eq [System.Windows.Forms.DialogResult]::OK) {
         [string]$FilePath=$dlgFileBrowser.FileName
         $mySettings = Get-Content -Path $FilePath | ConvertFrom-Json
         $txtLocalRepositoryPath.Text=$mySettings.LocalRepositoryPath;
@@ -1095,6 +1095,7 @@ if ($SyncScriptRepository) {
     }
 }
 SqlDeep-Comment#>
+
 
 
 
