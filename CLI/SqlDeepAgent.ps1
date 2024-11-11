@@ -192,7 +192,7 @@ param (
         }
         end {
             if ($null -eq $myAnswer) {
-                Write-Host 'DacPac module does not found, please Downloaded and install it from https://www.powershellgallery.com/packages/PublishDacPac/ or run this command in powershell console: Install-Module -Name PublishDacPac'
+                Write-Host 'DacPac module does not found, please Downloaded and install it from official site https://learn.microsoft.com/en-us/sql/tools/sqlpackage/sqlpackage-download?view=sql-server-ver16 or install informal version from https://www.powershellgallery.com/packages/PublishDacPac/ or run this command in powershell console: Install-Module -Name PublishDacPac'
             }
             Write-Host ('Find-SqlPackageLocation finished.')
         }
