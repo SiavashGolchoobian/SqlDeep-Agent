@@ -26,6 +26,8 @@ if (Test-Path $myBasePath\CLI\SqlDeepAgent.psm1 -PathType Leaf) {Remove-Authenti
 if (Test-Path $myBasePath\CLI\SqlDeepAgent.psm1 -PathType Leaf) {(Get-Content $myBasePath\CLI\SqlDeepAgent.psm1).Replace('#<#SqlDeep-Comment','<#SqlDeep-Comment').Replace('#SqlDeep-Comment#>','SqlDeep-Comment#>') | Set-Content $myBasePath\CLI\SqlDeepAgent.psm1;Write-Host 'Comment parameters'}
 Merge-Script -Script $myBasePath\GUI\SqlDeepAgentGUI.ps1 -Bundle -OutputPath $myBasePath\GUI\Out -Verbose
 Write-Host 'SqlAgent bundle file is created'
+if (Test-Path $myBasePath\Assets\Prerequisites\SqlDeepPublic.cer -PathType Leaf) {Copy-Item -Path $myBasePath\Assets\Prerequisites\SqlDeepPublic.cer -Destination $myBasePath\GUI\Out\SqlDeepPublic.cer -Force ;Write-Host 'Copy SqlDeepPublic.cer to store in package resource'}
+if (Test-Path $myBasePath\Assets\Prerequisites\DacFramework_161.msi -PathType Leaf) {Copy-Item -Path $myBasePath\Assets\Prerequisites\DacFramework_161.msi -Destination $myBasePath\GUI\Out\DacFramework_161.msi -Force ;Write-Host 'Copy DacFramework_161.msi to store in package resource'}
 Merge-Script -ConfigFile $myBasePath\GUI\SqlDeepAgentGUI.psd1 -Verbose -Debug
 Write-Host 'SqlAgent exe file is created'
 if (Test-Path $myBasePath\GUI\Out\SqlDeepAgentGUI.exe -PathType Leaf) {Move-Item $myBasePath\GUI\Out\SqlDeepAgentGUI.exe $myBasePath\GUI ;Write-Host 'exe file was moved'}

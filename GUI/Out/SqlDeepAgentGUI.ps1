@@ -5,8 +5,10 @@ $btnExit_Click = {
     $Main.Dispose()
 }
 $mnuCertificate_Click = {
+    Install-Certificate
 }
 $mnuSqlPackage_Click = {
+    Install-SqlPackage
 }
 $mnuLoadConfig_Click = {
     Load-Config
@@ -87,6 +89,30 @@ function Load-Config(){
         $txtConnectionString.Text=$mySettings.ConnectionString;
         $txtSqlDeepRepositoryItemFileName.Text=$mySettings.SqlDeepRepositoryItemsFileName;
     }
+}
+function Get-ResourceAsBinary {
+    param($Name)
+    
+    $ProcessName = (Get-Process -Id $PID).Name
+    $Stream = [System.Reflection.Assembly]::GetEntryAssembly().GetManifestResourceStream("$ProcessName.g.resources")
+    $KV = [System.Resources.ResourceReader]::new($Stream) | Where-Object { $_.Key -EQ $Name }
+    [System.IO.BinaryReader]::new($KV.Value).ReadBytes($KV.Value.Length)
+}
+function Install-Certificate(){
+    [string]$LocalRepositoryPath=$txtLocalRepositoryPath.Text;
+    Write-Host ('Exporting SqlDeepPublic.cer to ' + $LocalRepositoryPath)
+    $myBinaryContent=Get-ResourceAsBinary -Name 'SqlDeepPublic.cer'
+    Set-Content -Path ($LocalRepositoryPath+'\SqlDeepPublic.cer') -Value $myBinaryContent -Encoding Byte -Force
+    Import-Certificate -FilePath ($LocalRepositoryPath+'\SqlDeepPublic.cer') -CertStoreLocation 'Cert:\CurrentUser\My'
+    Write-Host ($LocalRepositoryPath + '\SqlDeepPublic.cer installed')
+}
+function Install-SqlPackage(){
+    [string]$LocalRepositoryPath=$txtLocalRepositoryPath.Text;
+    Write-Host ('Exporting DacFramework_161.msi to ' + $LocalRepositoryPath)
+    $myBinaryContent=Get-ResourceAsBinary -Name 'DacFramework_161.msi'
+    Set-Content -Path ($LocalRepositoryPath+'\DacFramework_161.msi') -Value $myBinaryContent -Encoding Byte -Force
+    Start-Process ($LocalRepositoryPath+'\DacFramework_161.msi');
+    Write-Host ($LocalRepositoryPath + '\DacFramework_161.msi installed')
 }
 Add-Type -AssemblyName System.Windows.Forms
 $Main = New-Object -TypeName System.Windows.Forms.Form
@@ -1095,6 +1121,33 @@ if ($SyncScriptRepository) {
     }
 }
 SqlDeep-Comment#>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -20,15 +20,16 @@
         #PowerShellVersion = '7.4.0'
         #DotNetVersion = 'net5.0'       bad
         #PowerShellVersion = '7.1.4'    bad
-        FileVersion = '1.0.0'
+        FileVersion = '1.0.1'
         FileDescription = 'SqlDeep Synchronizer Agent'
         ProductName = 'SqlDeep Synchronizer'
-        ProductVersion = '1.0.0'
+        ProductVersion = '1.0.1'
         Copyright = 'SqlDeep'
         RequireElevation = $false
         ApplicationIconPath = 'C:\Users\Siavash\Dropbox\SQL Deep\Logo\SqlDeepV4.ico'
         PackageType = 'Console'
         Company = 'Bina Management'
+        Resources = [string[]]@('SqlDeepPublic.cer','DacFramework_161.msi')
         Certificate = 'Cert:\CurrentUser\My\CFF6B983B70FA11FCDD3C7CFC68F724E903A01B4'
     }
 }
