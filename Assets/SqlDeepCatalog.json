@@ -6,8 +6,8 @@
     {
       "SqlDeepSynchronizerTools": [
         {
-          "name": "SqlDeepAgent.psm1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/CLI/SqlDeepAgent.psm1",
+          "name": "SqlDeepAgent.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/CLI/SqlDeepAgent.ps1",
           "description": "The SqlDeep Synchronizer Agent powershell module."
         },
         {

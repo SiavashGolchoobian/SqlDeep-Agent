@@ -1,14 +1,14 @@
-#<#SqlDeep-Comment
-[CmdletBinding(DefaultParameterSetName = 'SYNC_ONLINE')]
+<#SqlDeep-Comment
 param (
     [Parameter(Mandatory=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
-    [Parameter(Mandatory=$false,HelpMessage="Target database connection string",ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][ValidateNotNullOrEmpty()][string]$ConnectionString,
-    [Parameter(Mandatory=$true,HelpMessage="SqlDeep RepositoryItems file path",ParameterSetName = 'SYNC_OFFLINE')]$SqlDeepRepositoryItemsFileName,
-    [Parameter(Mandatory=$false,ParameterSetName = 'DOWNLOAD')][Parameter(ParameterSetName = 'SYNC_ONLINE')][Switch]$DownloadAssets,
-    [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncDatabaseModule,
-    [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncScriptRepository
+    [Parameter(Mandatory=$false,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+    [Parameter(Mandatory=$false,HelpMessage="SqlDeep RepositoryItems file path")]$SqlDeepRepositoryItemsFileName,
+    [Parameter(Mandatory=$false)][Switch]$DownloadAssets,
+    [Parameter(Mandatory=$false)][Switch]$CompareDatabaseModule,
+    [Parameter(Mandatory=$false)][Switch]$SyncDatabaseModule,
+    [Parameter(Mandatory=$false)][Switch]$SyncScriptRepository
 )
-#SqlDeep-Comment#>
+SqlDeep-Comment#>
 
 #region Functions
     enum SqlDeepRepositoryItemCategory {
@@ -480,11 +480,12 @@ param (
         [CmdletBinding(DefaultParameterSetName = 'SYNC_ONLINE')]
         param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
-            [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string",ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][ValidateNotNullOrEmpty()][string]$ConnectionString,
-            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file path",ParameterSetName = 'SYNC_OFFLINE')]$SqlDeepRepositoryItemsFileName,
-            [Parameter(Mandatory=$false,ParameterSetName = 'DOWNLOAD')][Parameter(ParameterSetName = 'SYNC_ONLINE')][Switch]$DownloadAssets,
-            [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncDatabaseModule,
-            [Parameter(Mandatory=$false,ParameterSetName = 'SYNC_ONLINE')][Parameter(ParameterSetName = 'SYNC_OFFLINE')][Switch]$SyncScriptRepository
+            [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file path")]$SqlDeepRepositoryItemsFileName,
+            [Parameter(Mandatory=$false)][Switch]$DownloadAssets,
+            [Parameter(Mandatory=$false)][Switch]$CompareDatabaseModule,
+            [Parameter(Mandatory=$false)][Switch]$SyncDatabaseModule,
+            [Parameter(Mandatory=$false)][Switch]$SyncScriptRepository
         )
         begin{
             Write-Host ('Sync-SqlDeep started.')
@@ -494,21 +495,33 @@ param (
         }
         process{
             [RepositoryItem[]]$myRepositoryItems=$null
+            [string]$myReportFilePath=$null
             if ($DownloadAssets) {
                 Write-Host 'Download ...' -ForegroundColor Green
                 $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
+            }else{
+                Write-Host ('Load Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+                $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
+            }
+
+            if ($CompareDatabaseModule) {
+                Write-Host 'CompareDatabaseModule ...' -ForegroundColor Green
+                if ($null -ne $myRepositoryItems){
+                    Write-Host 'Generate Diff Report ...' -ForegroundColor Green
+                    $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+                        $myReportFilePath=$LocalRepositoryPath + '\' + $_.FileName + (Get-Date -Format "yyyyMMdd_HHmmss").ToString() + '.report.xml';
+                        Write-Host ('Generating DatabaseDacPac report to file ' + $myReportFilePath) -ForegroundColor Green;
+                        Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath $myReportFilePath;
+                        Write-Host ('DatabaseDacPac report was generated on file ' + $myReportFilePath) -ForegroundColor Green;
+                    }
+                }else{
+                    Write-Host 'Catalog is empty.' -ForegroundColor Red
+                }
             }
             if ($SyncDatabaseModule) {
-                Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
-                if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-                    Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
-                    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
-                }
                 if ($null -ne $myRepositoryItems){
                     Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
                     $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-                        Write-Host ('Generate DatabaseDacPac report file ' + $LocalRepositoryPath + '\' + $_.FileName + '.report') -ForegroundColor Green;
-                        Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath ($LocalRepositoryPath+'\'+$_.FileName+'.report');
                         Write-Host ('Publish DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
                         Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
                     }
@@ -517,11 +530,6 @@ param (
                 }
             }
             if ($SyncScriptRepository) {
-                Write-Host 'SyncScriptRepository ...' -ForegroundColor Green
-                if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-                    Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
-                    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
-                }
                 if ($null -ne $myRepositoryItems){
                     Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
                     Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
@@ -536,31 +544,45 @@ param (
     }
 #endregion
 
-#<#SqlDeep-Comment
 #region Export
-Export-ModuleMember -Function Sync-SqlDeep
+#Export-ModuleMember -Function Sync-SqlDeep
 #endregion
 
+<#SqlDeep-Comment
 #---------MAIN
 if ($LocalRepositoryPath[-1] -eq '\'){
     $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
 }
 [RepositoryItem[]]$myRepositoryItems=$null
+[string]$myReportFilePath=$null
+
 if ($DownloadAssets) {
     Write-Host 'Download ...' -ForegroundColor Green
     $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
+}else{
+    Write-Host ('Load Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+    $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
+}
+
+if ($CompareDatabaseModule) {
+    Write-Host 'CompareDatabaseModule ...' -ForegroundColor Green
+    if ($null -ne $myRepositoryItems){
+        Write-Host 'Generate Diff Report ...' -ForegroundColor Green
+        $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+            $myReportFilePath=($LocalRepositoryPath + '\' + $_.FileName + (Get-Date -Format "yyyyMMdd_HHmmss").ToString() + '.report.xml');
+            Write-Host ('Generating DatabaseDacPac report to file ' + $myReportFilePath) -ForegroundColor Green;
+            Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath $myReportFilePath;
+            Write-Host ('DatabaseDacPac report was generated on file ' + $myReportFilePath) -ForegroundColor Green;
+        }
+    }else{
+        Write-Host 'Catalog is empty.' -ForegroundColor Red
+    }
 }
 if ($SyncDatabaseModule) {
     Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
-    if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-        Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
-        $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
-    }
     if ($null -ne $myRepositoryItems){
-        Write-Host 'Generate Diff Report and Publish DatabaseDacPac ...' -ForegroundColor Green
+        Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-            Write-Host ('Generate DatabaseDacPac report file ' + $LocalRepositoryPath + '\' + $_.FileName + '.report') -ForegroundColor Green;
-            Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath ($LocalRepositoryPath+'\'+$_.FileName+'.report');
             Write-Host ('Publish DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
             Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
         }
@@ -570,10 +592,6 @@ if ($SyncDatabaseModule) {
 }
 if ($SyncScriptRepository) {
     Write-Host 'SyncScriptRepository ...' -ForegroundColor Green
-    if ($PSCmdlet.ParameterSetName -eq 'SYNC_OFFLINE'){
-        Write-Host ('Load Offline Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
-        $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
-    }
     if ($null -ne $myRepositoryItems){
         Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
         Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
@@ -581,7 +599,7 @@ if ($SyncScriptRepository) {
         Write-Host 'Catalog is empty.' -ForegroundColor Red
     }
 }
-#SqlDeep-Comment#>
+SqlDeep-Comment#>
 
 
 
@@ -589,8 +607,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCB6OLRybQJGeFt7
-# 8ximeTxYecj+R9S/dv+/lx1DXMXNm6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBjZF0OzcM9GXmD
+# JNya6f34iRSxK3l7RwQNAiU8qSYit6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -712,28 +730,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCBFnQyX0YZV0J+fI7RaFpIooBj4CsIT8NCGUk3zF3it+TANBgkqhkiG9w0BAQEF
-# AASCAQDN1DDGTp9mXPDEz6VUxlSuD9hRkPt54d3zwWC6xu9beXLEoJE9yJrEP7uR
-# Qk1WJvdhGyrnMmAnc8O2N7/F3CBfLHouDgWwsOFM6BesaOchRPfoBg6rwaTgPrOp
-# ttRjky9Aqz381MER9319UZ21F1nZDADrAvM47/SWuOHwaLzT1A96WjDD4SrMmA6d
-# qZSHItPK7QcAuUfnr9wRCCwqZwBAmF5t1WXiu2sUbZCTXJoRdtVT6gZa5ofpR47p
-# N3AbMt+8wFs0wsV4HBXOWGBX7N+nt4dTdUOGMB+MY2TaXoigHDPZ0IPfV2Rsw1ED
-# 0/nMGc5n+Qj2U/UwtGkb/KTxWm3XoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCDypT1Po/uCEyhwaxpQCobnBI5Fx3CyDLfr7avPVaGQ7zANBgkqhkiG9w0BAQEF
+# AASCAQB2u7i6En3GfALhaFLjcQ8JRvEZ93BMI/iGJ+IrWtT6Cl9r4l9fAvcL9ZbC
+# UEZ7DgMm2kxxoQBhl48962zLp2VE0KsrYlVa34UqZ+z4c+92gI9/vJ5j7jceomC6
+# NX2ozrDfDktTBDUEKgK/4kJXJFrQrXL0JMmciTtehgAcSvQhOFmEWLyzNo8e4aHD
+# RMs5kVDLbY2qAcPIjTyhscZm5tzLHaOS4DV4x62h0iyjoDTsOAdUuT/vfUWdbcWh
+# TKET/nN4pJTfdBFL2bramdYsMW+xg+iXnEEaHbx8LYzu11GwL/hU7HT+lrgX/ep+
+# NJxbw91iJqQ8O+GYP3CMiht9DzT9oYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExMDIy
-# MDIyOFowLwYJKoZIhvcNAQkEMSIEIKceOkKlmeJnzcsToDU+vppMUX+SASZXO/GW
-# 9WCDQ/HMMA0GCSqGSIb3DQEBAQUABIICAF/CxF4Qt+lvZL4l6OplQwUD3e8TvKax
-# npoiMNLqbyWbPINMuX/MdqiIPNdUU6m0HtvLr9+7xPQfEr8PRJxiZRhL6SJdj8OX
-# hiG5493Tn7gyWNHUWuMlOMtsxaIKsiidSvor/KD8veZvxqy9uG8lAdGCvK0Zpn2j
-# SIjfni/m2t1y9IMBBgTvfRPs2XKh7m1HgsnVCk56HvHLXgNglnJ1Mci2G8yDfu24
-# nv2hzKpEEpPiI9ITLr1ynrpDziO9nO5NBKKaEE0aQZSjJ71FFGAZP9uZkYj4kbKf
-# kYIw5ngIus7ARdj304KT41AaJGpcnQXlwvSK3JTAA1K7tBcKk/ADlvWbwqlZU/dL
-# zbXiyO2LUoBzVyTtJCUCrKtzXJArBW6whmVw2UBrILgb/itt0w3JNhn2T/KEG8Uf
-# sgC6zaKm65UQMw1jbiqrFU4taYb3mIBK/gWRa80VWRe5+6cKgFTm5B6oM60e0U+1
-# t0/rPCusemWhrKEpX4Lws70xA2e7NqUu67MKBioaOxjYL3AXpMWTWQaQsTSvvDXL
-# mCnraV3ui2n1IePEB5Eq8/jVxwGSiMI7yGjb0PzZXJq0tdOfzt1+MU8VEUv+HkCv
-# EuLaZF9AswJNzuePXPR+vRpUUwg+9yMV8/1RhHFT63xt2HdnblhZ/HNqyDFflw8+
-# VhwIoJpxFATt
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExMTEx
+# MDgzOFowLwYJKoZIhvcNAQkEMSIEINjrhXGJggAxnuGwTOS3d+LzOSNok23jPgI/
+# gucvcnWTMA0GCSqGSIb3DQEBAQUABIICAIopL7N+6E1gD8DABceE6/v2Zg2NCnkh
+# kaDo5cj3GyDNVw1KbnboaD674Tp3w4vjlu7rclsmMPgTJDksdUSTdw0E8X1+Wuvb
+# KL33u7OiSYuVtoc6wpwQdSpnTw62dX7PTD/rG2cy2gtUTCfFHRnKs4ATUHjeHqv8
+# R+VjJmvrd9xmGUpamXm6+4SgstvGUSsPlJyZ6HgZ/XxTQPgnlfDIGEtjlzlaeKVY
+# pthR+O97FpOCezHUe2lVoDRGv5s1m+IFZohtI8CrDX+2MGhHNeQ2IitAj9eERf24
+# QvmD2a+DC59GV34huPmhdScaiWFaUHAC7K7514Nj9Pkkd1r7jb/incktHvun3Zfv
+# +ZLOQc64EPLHhT7UZRYrqnpVhcYm7TPGS1JCZfU0LMvzuhkA6H1CGArmyZHxYZkO
+# 2rINaSsvmBiEijmO+LPkRyKctXcbKm1qo6+kH77LJQsE7cPRGZAEL4RliQNdoA82
+# 147pQmCUFeDAy/LNRgX3ev6rTtBfWvy5SZVwGvoJYEuzN1Abg26ThtMkWmf5aYcG
+# AReSLswv8vUKs24uTRK4MWvY6JxCs/z2Skb3YcfNbURaBSbD1sHbRDzGQwcunaUI
+# +rTbWMFF3BytsVmXTXGhzvyh1IWR1+8H449KJfCVxDVcyhsp0EHlyRsBzIS8Xp2r
+# T/EPls3sWo98
 # SIG # End signature block

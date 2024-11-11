@@ -1,19 +1,12 @@
-$btnLoadConfig_Click = {
-    $Main.dlgFileBrowser.Title='Load config file'
-    $Main.dlgFileBrowser.ShowDialog()
-    Load-Config -FilePath ($dlgFileBrowser.FileName)    
-}
-$btnSaveConfig_Click = {
-    $Main.dlgSaveFile.Title='Save config to a file'
-    $Main.dlgSaveFile.ShowDialog()
-    Save-Config -FilePath ($dlgSaveFile.FileName)
-}
 $chkDownloadAssets_CheckedChanged = {
 }
 $chkSyncScriptRepository_CheckedChanged = {
     Set-Controls
 }
 $chkSyncDatabaseModule_CheckedChanged = {
+    Set-Controls
+}
+$chkCompare_CheckedChanged = {
     Set-Controls
 }
 $btnSync_Click = {
@@ -35,18 +28,25 @@ $btnSync_Click = {
     }
     $Main.Cursor=[System.Windows.Forms.Cursors]::Default
 }
+$btnLoadConfig_Click = {
+    $Main.dlgFileBrowser.Title='Load config file'
+    $Main.dlgFileBrowser.ShowDialog()
+    Load-Config -FilePath ($dlgFileBrowser.FileName)    
+}
+$btnSaveConfig_Click = {
+    $Main.dlgSaveFile.Title='Save config to a file'
+    $Main.dlgSaveFile.ShowDialog()
+    Save-Config -FilePath ($dlgSaveFile.FileName)
+}
 $btnBrowse_Click = {
     $dlgFolderBrowser.ShowDialog()
     $txtLocalRepositoryPath.Text=$dlgFolderBrowser.SelectedPath
 }
-
 function Set-Controls(){
-    if ($chkSyncDatabaseModule.Checked -eq $true -or $chkSyncScriptRepository.Checked -eq $true){
+    if ($chkSyncDatabaseModule.Checked -eq $true -or $chkSyncScriptRepository.Checked -eq $true -or $chkCompare.Checked -eq $true){
         $txtConnectionString.Enabled=$true
-        $txtSqlDeepRepositoryItemFileName.Enabled=$true
     } else {
         $txtConnectionString.Enabled=$false
-        $txtSqlDeepRepositoryItemFileName.Enabled=$false
     }
 }
 function Save-Config(){
