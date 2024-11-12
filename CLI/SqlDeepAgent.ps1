@@ -145,6 +145,7 @@ param (
         )
         begin {
             Write-Host ('Find-SqlPackageLocation started.')
+            Write-Host ('Find-SqlPackageLocation called with ' + $SqlPackageFilePath)
             [string]$myAnswer=$null
             [string]$myExeName = "SqlPackage.exe";
             [string]$mySqlPackageFilePath=$null;
@@ -185,11 +186,18 @@ param (
                 } 
             }
             catch {
-                Write-Error 'Find-SqlPackageLocations failed with error: ' + $_.ToString();
+                Write-Error ('Find-SqlPackageLocations failed with error: ' + $_.ToString());
             }
 
-            if ($null -ne $SqlPackageFilePath -and (Test-Path -Path $SqlPackageFilePath) -eq $true) {
-                $myAnswer=$SqlPackageFilePath
+            if ($null -ne $SqlPackageFilePath -and ($SqlPackageFilePath.Length) -ge 10) {
+                if (Test-Path -Path $SqlPackageFilePath -PathType Leaf) {
+                    $myAnswer=$SqlPackageFilePath
+                    Write-Host ('User defined SqlPackageFilePath that send by caller was used with path: ' + $myAnswer)
+                }else{
+                    Write-Host ('User defined SqlPackageFilePath parameter path does not exists' + $SqlPackageFilePath)
+                }
+            }else{
+                Write-Host ('User defined SqlPackageFilePath parameter is null or empty' + $SqlPackageFilePath + ', file length is ' + $SqlPackageFilePath.Length.ToString())
             }
             if ($myAnswer) {
                 $mySqlPackageFilePath=$myAnswer
@@ -197,6 +205,7 @@ param (
                 $mySqlPackageFolderPath=Clear-FolderPath -FolderPath $mySqlPackageFolderPath
                 if (-not ($env:Path).Contains($mySqlPackageFolderPath)) {$env:path = $env:path + ';'+$mySqlPackageFolderPath+';'}
             }
+            Write-Host $myAnswer
             return $myAnswer
         }
         end {
@@ -478,7 +487,6 @@ param (
         }
     }
     function Sync-SqlDeep(){
-        [CmdletBinding(DefaultParameterSetName = 'SYNC_ONLINE')]
         param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
             [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
@@ -491,6 +499,7 @@ param (
         )
         begin{
             Write-Host ('Sync-SqlDeep started.')
+            Write-Host ('Sync-SqlDeep called with parameter '+$SqlPackageFilePath)
             if ($LocalRepositoryPath[-1] -eq '\'){
                 $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
             }
@@ -507,7 +516,7 @@ param (
             }
             if ($CompareDatabaseModule -or $SyncDatabaseModule) {
                 if ($null -ne (Find-SqlPackageLocation -SqlPackageFilePath $SqlPackageFilePath )) {
-	                Write-Error 'DacPac binaries founded.'
+	                Write-Host 'DacPac binaries founded.'
                 }else{
                     Write-Error 'DacPac binaries does not found. please install dacpac binaries.'
                 }
@@ -574,7 +583,7 @@ if ($DownloadAssets) {
 }
 if ($CompareDatabaseModule -or $SyncDatabaseModule) {
     if ($null -ne (Find-SqlPackageLocation -SqlPackageFilePath $SqlPackageFilePath )) {
-        Write-Error 'DacPac binaries founded.'
+        Write-Host 'DacPac binaries founded.'
     }else{
         Write-Error 'DacPac binaries does not found. please install dacpac binaries.'
     }
@@ -618,51 +627,11 @@ if ($SyncScriptRepository) {
 #SqlDeep-Comment#>
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBwSHs131Gi7aMS
-# WkE4HRbNyPsp4bZfWlQdtvCZQ14hG6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDAxX4/ODTCDmN2
+# RYWoEL9XxRwMWxVz1Vo1dJEC1NKv8aCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -784,28 +753,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCDZfCpvpxTFcJGzUcrZoLzAGG5gdkVtgrsxjgZg+I8zFjANBgkqhkiG9w0BAQEF
-# AASCAQAyk5CLc0acWQ1p6iA7uLBYgzrYNR/WD8UBckby2Oh8xcU5qTLxlXmo2zZr
-# bvTVVzImAqVXg78mNqr5OmbQSxhS4KJwOKVvOCC7VXYw2rV1AbB1nJ1TcYbubwRo
-# J9spiDJq2XmoekFwBKgaF62cp+L/efa6gStoKkQyispm3PP7O6+JN1DdYjDY6Lpa
-# r+z1PKlPSM3Nbuye50qcbbJMD3wzNrhunZdkvNuVSJZddlKCfT+W7GRjTxcZIkX8
-# a4ggZfo7NbuK2RqJ2/gUMPuhzIYuhacQs64JsqOxj/9Yk0TqyWoGRX1w7el6d2Vn
-# LXQF2zIVLS8oq2Muq/E28LR6xzhXoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCByuj3VgY4Dx/ct1YQYeTDSncUWeNn1eOzdeRjlyr4eZjANBgkqhkiG9w0BAQEF
+# AASCAQDMqEia8/HRv0TYEENt4Kuk6H5sFOMvFM/VYAqaVtgXk+xcDVzACI6a2XJi
+# 26ePdeMs1FgHDrgQI2UA2s8tFF1tZ+n0hBA3KBUHbheXQXAV3vi2PlNHA9vduCg1
+# ACq5hHNh113Hhrv+wTMdA48BHvIM1oGyWIygFX+keMk2PMEXbwU0l2LQzi8NKntA
+# IcKaSAhJzAL99wkSG08vffWk0WKa8j2bx8Lpf77tB9wL9Jt6cuiVeepm63QBpDKD
+# nJHlzVMOvtJRX/RMISItus6dJrq1VXeTU31sXOFMewhPRycwzgOM4M1asdGhEIjk
+# PLn8a7KCo2pA0jE+ShDb2Aq5nALkoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExMjE1
-# NTcxNlowLwYJKoZIhvcNAQkEMSIEIIdsr0pyFDTXhZSErSZgogTZ46u7KuGSs40I
-# 0z1kiahSMA0GCSqGSIb3DQEBAQUABIICAKZNHP+znPrA/GrOCbIjx3KPERqIGG2D
-# 9nxVY8MwQ3AejNRykZHNoPPCv8mtI3IYOJfQrg0BUiiPkLYD3bb4jKLj5zOIGKEm
-# oFI1DNnHSVoPhq+uCLVy5iWso0cEd3bKDoKZY95WmCd7l0CT0H//oAWLyz68amTK
-# 6qo6xRTb1BbvPDtrFFYSA9Pod0oIk1WCsR34elRZMF0NaiURA2LX3H7DzDl3vEnr
-# EMAty4OPsYlwL1lv9QQeX5eWNvggKhT9din/7zvMa/S3AxiwL0vdPcp4D9UGrRrI
-# SO/ae0FWnOLvYFbQpjnexm6XK3KmqrCXzJV3SEl0+Mn4NorntBun1lDOeBFxpvUq
-# ORB/Sc6IvJxiysTyms65o7lM+XX9kRelbEDR+0OzGW3Ay1a3jk0SWtXe+pt6sxzZ
-# wGTJZyt+aVCZAguEnvfpjVfhbn0JQjg1+fgfcNho3boogNOhsnwpVkH8QwHFNu1m
-# O6c31XTFAIVNmsZdjK+Uv81mWCiFv/a3yzdcVAqb9lMwR9r1NhY0RMlL3Aeqoz/O
-# xe+T/Xv9vszET4xZQXfAskbtoZ3xk0i8xEM5g1L1aKhI1/VFX+G3Ot2D5m+/4+3G
-# ZnM4N3//q+zjq/TbYiBmn4i3KQgJicAU0eaE3DKWu5FTN3vnCxq725xSW70ky+dF
-# yF/ekrLaUFul
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExMjE2
+# NTc1MFowLwYJKoZIhvcNAQkEMSIEIIs3NHzOOX8hveKeZi4h0A8kuY3QzBD/meFP
+# XfDn3PcfMA0GCSqGSIb3DQEBAQUABIICACplqOJY4r77a6TwrFQaUNehIhXOvY4N
+# MyTCBmETVb1OzTFLbEzK569R05VHQLauv4XoxlMrsnTBKjU+2+gSJUw6pGHd1VN4
+# d6D+BeMC9W/dV9e6k9W8ANkAA+n5mszaljZiAq8ucoPaX2LoVHGCmmLoTg/ga8X8
+# N3YH/OnwKuSh6M+x0c58owqzAfxPxZhnd70fJ5GXjVDaX2yu4rI5pt0iSTWaCs8x
+# aGq3NoZg9Q5ufiVi/6zd62ds/m25IurMWkC2y5S4pKnTto9XhoBftidZI9IqVVDv
+# /fi9HV5nHn31wL2/tzFieU9yeqvQgWTZu3oDZcrIm4N261Lg3YZLKZx3NxD1mXAY
+# SmNVDFtDKculOvgfqfC0IcK8uDMAu1yrTMkhnOa6JGHQK3Bt+07dEMTCzXAgZZbU
+# YzIZCeiucoRp7oiZ1KMjqexEP75ivAaA0FO6nNkT08uZxsVi3aLXbPsX/N04TyRt
+# OslWRHOZaH5pHas+OIBmScUMrJx+dXBTbnd4P+f20lLgX8/Fzo+vOU6DvI9ICOHd
+# /SipBOI8mSYfFHrw0wkht/vBR7LgCj53XPWxhDL7I92uyCyTBwgEHQ45VEqJW2hj
+# vNrV3Zwl4/k/wcZnsu/AorMC280uqRRC5nugGwyPr8m1Dqw8bKWD+hnWY4ct9JjZ
+# QoSRVmqBhNt9
 # SIG # End signature block

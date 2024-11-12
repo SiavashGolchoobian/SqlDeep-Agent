@@ -27,6 +27,8 @@ $Main = New-Object -TypeName System.Windows.Forms.Form
 [System.Windows.Forms.ToolStripStatusLabel]$lblStatus = $null
 [System.Windows.Forms.ToolStripStatusLabel]$lblMessage = $null
 [System.Windows.Forms.ToolStripStatusLabel]$lblVersion = $null
+[System.Windows.Forms.Label]$lblSqlPackage = $null
+[System.Windows.Forms.TextBox]$txtSqlPackage = $null
 function InitializeComponent
 {
 $resources = . (Join-Path $PSScriptRoot 'sqldeepagentgui.resources.ps1')
@@ -58,6 +60,8 @@ $StatusStrip1 = (New-Object -TypeName System.Windows.Forms.StatusStrip)
 $lblStatus = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblMessage = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblVersion = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
+$lblSqlPackage = (New-Object -TypeName System.Windows.Forms.Label)
+$txtSqlPackage = (New-Object -TypeName System.Windows.Forms.TextBox)
 $MenuStrip.SuspendLayout()
 $StatusStrip1.SuspendLayout()
 $Main.SuspendLayout()
@@ -80,7 +84,7 @@ $txtLocalRepositoryPath.Text = [System.String]'C:\SqlDeep'
 #
 #lblConnectionString
 #
-$lblConnectionString.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]89))
+$lblConnectionString.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]114))
 $lblConnectionString.Name = [System.String]'lblConnectionString'
 $lblConnectionString.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]23))
 $lblConnectionString.TabIndex = [System.Int32]2
@@ -90,12 +94,12 @@ $lblConnectionString.Text = [System.String]'Connection string(s):'
 #
 $txtConnectionString.AcceptsReturn = $true
 $txtConnectionString.Enabled = $false
-$txtConnectionString.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]86))
+$txtConnectionString.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]114))
 $txtConnectionString.Multiline = $true
 $txtConnectionString.Name = [System.String]'txtConnectionString'
 $txtConnectionString.ScrollBars = [System.Windows.Forms.ScrollBars]::Both
-$txtConnectionString.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]381,[System.Int32]189))
-$txtConnectionString.TabIndex = [System.Int32]4
+$txtConnectionString.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]381,[System.Int32]161))
+$txtConnectionString.TabIndex = [System.Int32]5
 $txtConnectionString.Text = [System.String]$resources.'txtConnectionString.Text'
 $txtConnectionString.WordWrap = $false
 #
@@ -121,7 +125,7 @@ $txtSqlDeepRepositoryItemFileName.Text = [System.String]'SqlDeepCatalog.json.res
 $chkDownloadAssets.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]161))
 $chkDownloadAssets.Name = [System.String]'chkDownloadAssets'
 $chkDownloadAssets.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
-$chkDownloadAssets.TabIndex = [System.Int32]5
+$chkDownloadAssets.TabIndex = [System.Int32]6
 $chkDownloadAssets.Text = [System.String]'Download Assets'
 $chkDownloadAssets.UseVisualStyleBackColor = $true
 $chkDownloadAssets.add_CheckedChanged($chkDownloadAssets_CheckedChanged)
@@ -131,7 +135,7 @@ $chkDownloadAssets.add_CheckedChanged($chkDownloadAssets_CheckedChanged)
 $chkSyncDatabaseModule.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]221))
 $chkSyncDatabaseModule.Name = [System.String]'chkSyncDatabaseModule'
 $chkSyncDatabaseModule.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
-$chkSyncDatabaseModule.TabIndex = [System.Int32]7
+$chkSyncDatabaseModule.TabIndex = [System.Int32]8
 $chkSyncDatabaseModule.Text = [System.String]'Sync Database Module'
 $chkSyncDatabaseModule.UseVisualStyleBackColor = $true
 $chkSyncDatabaseModule.add_CheckedChanged($chkSyncDatabaseModule_CheckedChanged)
@@ -141,7 +145,7 @@ $chkSyncDatabaseModule.add_CheckedChanged($chkSyncDatabaseModule_CheckedChanged)
 $chkSyncScriptRepository.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]251))
 $chkSyncScriptRepository.Name = [System.String]'chkSyncScriptRepository'
 $chkSyncScriptRepository.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
-$chkSyncScriptRepository.TabIndex = [System.Int32]8
+$chkSyncScriptRepository.TabIndex = [System.Int32]9
 $chkSyncScriptRepository.Text = [System.String]'Sync Script Repository'
 $chkSyncScriptRepository.UseVisualStyleBackColor = $true
 $chkSyncScriptRepository.add_CheckedChanged($chkSyncScriptRepository_CheckedChanged)
@@ -151,7 +155,7 @@ $chkSyncScriptRepository.add_CheckedChanged($chkSyncScriptRepository_CheckedChan
 $btnSync.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]362,[System.Int32]285))
 $btnSync.Name = [System.String]'btnSync'
 $btnSync.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]95,[System.Int32]23))
-$btnSync.TabIndex = [System.Int32]9
+$btnSync.TabIndex = [System.Int32]10
 $btnSync.Text = [System.String]'&Run'
 $btnSync.UseVisualStyleBackColor = $true
 $btnSync.add_Click($btnSync_Click)
@@ -176,7 +180,7 @@ $btnExit.DialogResult = [System.Windows.Forms.DialogResult]::Cancel
 $btnExit.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]462,[System.Int32]285))
 $btnExit.Name = [System.String]'btnExit'
 $btnExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]95,[System.Int32]23))
-$btnExit.TabIndex = [System.Int32]10
+$btnExit.TabIndex = [System.Int32]11
 $btnExit.Text = [System.String]'E&xit'
 $btnExit.UseVisualStyleBackColor = $true
 $btnExit.add_Click($btnExit_Click)
@@ -199,7 +203,7 @@ $dlgFileBrowser.Filter = [System.String]'Config files|*.cfg'
 $chkCompare.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]191))
 $chkCompare.Name = [System.String]'chkCompare'
 $chkCompare.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]24))
-$chkCompare.TabIndex = [System.Int32]6
+$chkCompare.TabIndex = [System.Int32]7
 $chkCompare.Text = [System.String]'Comparision Report'
 $chkCompare.UseVisualStyleBackColor = $true
 $chkCompare.add_CheckedChanged($chkCompare_CheckedChanged)
@@ -223,21 +227,21 @@ $FileToolStripMenuItem.Text = [System.String]'&File'
 #mnuLoadConfig
 #
 $mnuLoadConfig.Name = [System.String]'mnuLoadConfig'
-$mnuLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
+$mnuLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
 $mnuLoadConfig.Text = [System.String]'&Load config ...'
 $mnuLoadConfig.add_Click($mnuLoadConfig_Click)
 #
 #mnuSaveConfig
 #
 $mnuSaveConfig.Name = [System.String]'mnuSaveConfig'
-$mnuSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
+$mnuSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
 $mnuSaveConfig.Text = [System.String]'&Save config ...'
 $mnuSaveConfig.add_Click($mnuSaveConfig_Click)
 #
 #mnuExit
 #
 $mnuExit.Name = [System.String]'mnuExit'
-$mnuExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
+$mnuExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
 $mnuExit.Text = [System.String]'E&xit'
 $mnuExit.add_Click($mnuExit_Click)
 #
@@ -280,7 +284,7 @@ $lblStatus.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([Sys
 #
 $lblMessage.ForeColor = [System.Drawing.Color]::Navy
 $lblMessage.Name = [System.String]'lblMessage'
-$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]485,[System.Int32]17))
+$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]516,[System.Int32]17))
 $lblMessage.Spring = $true
 $lblMessage.Text = [System.String]'You can comment connection string(s) by adding -- in front of each line.'
 #
@@ -291,11 +295,28 @@ $lblVersion.Name = [System.String]'lblVersion'
 $lblVersion.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]38,[System.Int32]17))
 $lblVersion.Text = [System.String]'V1.0.1'
 #
+#lblSqlPackage
+#
+$lblSqlPackage.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]12,[System.Int32]87))
+$lblSqlPackage.Name = [System.String]'lblSqlPackage'
+$lblSqlPackage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]158,[System.Int32]23))
+$lblSqlPackage.TabIndex = [System.Int32]16
+$lblSqlPackage.Text = [System.String]'SqlPackage.exe path (opt):'
+#
+#txtSqlPackage
+#
+$txtSqlPackage.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]176,[System.Int32]84))
+$txtSqlPackage.Name = [System.String]'txtSqlPackage'
+$txtSqlPackage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]381,[System.Int32]21))
+$txtSqlPackage.TabIndex = [System.Int32]4
+#
 #Main
 #
 $Main.AcceptButton = $btnSync
 $Main.CancelButton = $btnExit
 $Main.ClientSize = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]569,[System.Int32]336))
+$Main.Controls.Add($txtSqlPackage)
+$Main.Controls.Add($lblSqlPackage)
 $Main.Controls.Add($StatusStrip1)
 $Main.Controls.Add($chkCompare)
 $Main.Controls.Add($btnExit)
@@ -351,5 +372,7 @@ Add-Member -InputObject $Main -Name StatusStrip1 -Value $StatusStrip1 -MemberTyp
 Add-Member -InputObject $Main -Name lblStatus -Value $lblStatus -MemberType NoteProperty
 Add-Member -InputObject $Main -Name lblMessage -Value $lblMessage -MemberType NoteProperty
 Add-Member -InputObject $Main -Name lblVersion -Value $lblVersion -MemberType NoteProperty
+Add-Member -InputObject $Main -Name lblSqlPackage -Value $lblSqlPackage -MemberType NoteProperty
+Add-Member -InputObject $Main -Name txtSqlPackage -Value $txtSqlPackage -MemberType NoteProperty
 }
 . InitializeComponent

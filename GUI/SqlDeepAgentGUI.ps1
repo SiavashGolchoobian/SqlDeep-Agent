@@ -46,11 +46,11 @@ function Execute-Commands(){
     }
     if ($chkCompare.Checked){
         #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
-        $myConnections | ForEach-Object{Sync-SqlDeep -CompareDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) }
+        $myConnections | ForEach-Object{Sync-SqlDeep -CompareDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) -SqlPackageFilePath ($txtSqlPackage.Text)}
     }
     if ($chkSyncDatabaseModule.Checked){
         #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
-        $myConnections | ForEach-Object{Sync-SqlDeep -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) }
+        $myConnections | ForEach-Object{Sync-SqlDeep -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) -SqlPackageFilePath ($txtSqlPackage.Text)}
     }
     if ($chkSyncScriptRepository.Checked){
         #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
@@ -75,6 +75,7 @@ function Save-Config(){
                 LocalRepositoryPath=$txtLocalRepositoryPath.Text;
                 ConnectionString=$txtConnectionString.Text;
                 SqlDeepRepositoryItemsFileName=$txtSqlDeepRepositoryItemFileName.Text;
+                SqlPackageFilePath=$txtSqlPackage.Text;
             }
         $mySettings | ConvertTo-Json | Out-File -FilePath $FilePath
     }
@@ -88,6 +89,7 @@ function Load-Config(){
         $txtLocalRepositoryPath.Text=$mySettings.LocalRepositoryPath;
         $txtConnectionString.Text=$mySettings.ConnectionString;
         $txtSqlDeepRepositoryItemFileName.Text=$mySettings.SqlDeepRepositoryItemsFileName;
+        $txtSqlPackage.Text=$mySettings.SqlPackageFilePath;
     }
 }
 function Get-ResourceAsBinary {
