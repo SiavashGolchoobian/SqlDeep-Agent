@@ -26,6 +26,7 @@ $Main = New-Object -TypeName System.Windows.Forms.Form
 [System.Windows.Forms.StatusStrip]$StatusStrip1 = $null
 [System.Windows.Forms.ToolStripStatusLabel]$lblStatus = $null
 [System.Windows.Forms.ToolStripStatusLabel]$lblMessage = $null
+[System.Windows.Forms.ToolStripStatusLabel]$lblVersion = $null
 function InitializeComponent
 {
 $resources = . (Join-Path $PSScriptRoot 'sqldeepagentgui.resources.ps1')
@@ -47,15 +48,16 @@ $dlgFileBrowser = (New-Object -TypeName System.Windows.Forms.OpenFileDialog)
 $chkCompare = (New-Object -TypeName System.Windows.Forms.CheckBox)
 $MenuStrip = (New-Object -TypeName System.Windows.Forms.MenuStrip)
 $FileToolStripMenuItem = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
-$ToolsToolStripMenuItem = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuLoadConfig = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuSaveConfig = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuExit = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
+$ToolsToolStripMenuItem = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuCertificate = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuSqlPackage = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $StatusStrip1 = (New-Object -TypeName System.Windows.Forms.StatusStrip)
 $lblStatus = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblMessage = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
+$lblVersion = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $MenuStrip.SuspendLayout()
 $StatusStrip1.SuspendLayout()
 $Main.SuspendLayout()
@@ -218,33 +220,33 @@ $FileToolStripMenuItem.Name = [System.String]'FileToolStripMenuItem'
 $FileToolStripMenuItem.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]37,[System.Int32]20))
 $FileToolStripMenuItem.Text = [System.String]'&File'
 #
-#ToolsToolStripMenuItem
-#
-$ToolsToolStripMenuItem.DropDownItems.AddRange([System.Windows.Forms.ToolStripItem[]]@($mnuCertificate,$mnuSqlPackage))
-$ToolsToolStripMenuItem.Name = [System.String]'ToolsToolStripMenuItem'
-$ToolsToolStripMenuItem.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]46,[System.Int32]20))
-$ToolsToolStripMenuItem.Text = [System.String]'&Tools'
-#
 #mnuLoadConfig
 #
 $mnuLoadConfig.Name = [System.String]'mnuLoadConfig'
-$mnuLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
+$mnuLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
 $mnuLoadConfig.Text = [System.String]'&Load config ...'
 $mnuLoadConfig.add_Click($mnuLoadConfig_Click)
 #
 #mnuSaveConfig
 #
 $mnuSaveConfig.Name = [System.String]'mnuSaveConfig'
-$mnuSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
+$mnuSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
 $mnuSaveConfig.Text = [System.String]'&Save config ...'
 $mnuSaveConfig.add_Click($mnuSaveConfig_Click)
 #
 #mnuExit
 #
 $mnuExit.Name = [System.String]'mnuExit'
-$mnuExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
+$mnuExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
 $mnuExit.Text = [System.String]'E&xit'
 $mnuExit.add_Click($mnuExit_Click)
+#
+#ToolsToolStripMenuItem
+#
+$ToolsToolStripMenuItem.DropDownItems.AddRange([System.Windows.Forms.ToolStripItem[]]@($mnuCertificate,$mnuSqlPackage))
+$ToolsToolStripMenuItem.Name = [System.String]'ToolsToolStripMenuItem'
+$ToolsToolStripMenuItem.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]46,[System.Int32]20))
+$ToolsToolStripMenuItem.Text = [System.String]'&Tools'
 #
 #mnuCertificate
 #
@@ -262,7 +264,7 @@ $mnuSqlPackage.add_Click($mnuSqlPackage_Click)
 #
 #StatusStrip1
 #
-$StatusStrip1.Items.AddRange([System.Windows.Forms.ToolStripItem[]]@($lblStatus,$lblMessage))
+$StatusStrip1.Items.AddRange([System.Windows.Forms.ToolStripItem[]]@($lblStatus,$lblMessage,$lblVersion))
 $StatusStrip1.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]0,[System.Int32]314))
 $StatusStrip1.Name = [System.String]'StatusStrip1'
 $StatusStrip1.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]569,[System.Int32]22))
@@ -278,9 +280,16 @@ $lblStatus.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([Sys
 #
 $lblMessage.ForeColor = [System.Drawing.Color]::Navy
 $lblMessage.Name = [System.String]'lblMessage'
-$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]554,[System.Int32]17))
+$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]485,[System.Int32]17))
 $lblMessage.Spring = $true
 $lblMessage.Text = [System.String]'You can comment connection string(s) by adding -- in front of each line.'
+#
+#lblVersion
+#
+$lblVersion.DisplayStyle = [System.Windows.Forms.ToolStripItemDisplayStyle]::Text
+$lblVersion.Name = [System.String]'lblVersion'
+$lblVersion.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]38,[System.Int32]17))
+$lblVersion.Text = [System.String]'V1.0.1'
 #
 #Main
 #
@@ -341,5 +350,6 @@ Add-Member -InputObject $Main -Name mnuSqlPackage -Value $mnuSqlPackage -MemberT
 Add-Member -InputObject $Main -Name StatusStrip1 -Value $StatusStrip1 -MemberType NoteProperty
 Add-Member -InputObject $Main -Name lblStatus -Value $lblStatus -MemberType NoteProperty
 Add-Member -InputObject $Main -Name lblMessage -Value $lblMessage -MemberType NoteProperty
+Add-Member -InputObject $Main -Name lblVersion -Value $lblVersion -MemberType NoteProperty
 }
 . InitializeComponent
