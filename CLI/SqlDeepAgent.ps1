@@ -153,7 +153,6 @@ param (
                 # Get SQL Server locations
                 [System.Management.Automation.PathInfo[]]$myPathsToSearch = Resolve-Path -Path "${env:ProgramFiles}\Microsoft SQL Server\*\DAC\bin" -ErrorAction SilentlyContinue;
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles}\Microsoft SQL Server\*\Tools\Binn" -ErrorAction SilentlyContinue;
-                $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles}\Microsoft SQL Server\*\DAC\bin" -ErrorAction SilentlyContinue;
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\Tools\Binn" -ErrorAction SilentlyContinue;
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles(x86)}\Microsoft SQL Server\*\DAC\bin" -ErrorAction SilentlyContinue;
                 $myPathsToSearch += Resolve-Path -Path "${env:ProgramFiles(x86)}\Microsoft Visual Studio *\Common7\IDE\Extensions\Microsoft\SQLDB\DAC" -ErrorAction SilentlyContinue;
@@ -161,7 +160,7 @@ param (
                 # For those that install SQLPackage.exe in a completely different location, set environment variable CustomSqlPackageInstallLocation
                 $myCustomInstallLocation = [Environment]::GetEnvironmentVariable('CustomSqlPackageInstallLocation');
                 $myCustomInstallLocation = Clear-FolderPath -FolderPath $myCustomInstallLocation
-                if ($myCustomInstallLocation -ne '') {
+                if ($myCustomInstallLocation -ne '' -and $null -ne $myCustomInstallLocation) {
                     if (Test-Path $myCustomInstallLocation) {
                         $myPathsToSearch += Resolve-Path -Path ($myCustomInstallLocation+'\') -ErrorAction SilentlyContinue;
                     }        
@@ -637,11 +636,12 @@ if ($SyncScriptRepository) {
 
 
 
+
 # SIG # Begin signature block
 # MIIFngYJKoZIhvcNAQcCoIIFjzCCBYsCAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCVWMsQ6aqYxwzR
-# opUuCX/w6BjkM8a8RDgWU7h+Fb0PXqCCAxgwggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBpTr7lHuPGWLKw
+# xlSuT6Nm9PpSc83Ca4DvIiZ9TvjTaaCCAxgwggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -661,12 +661,12 @@ if ($SyncScriptRepository) {
 # 6lUxggHcMIIB2AIBATAqMBYxFDASBgNVBAMMC3NxbGRlZXAuY29tAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCWCGSAFlAwQCAQUAoIGEMBgGCisGAQQBgjcCAQwxCjAIoAKA
 # AKECgAAwGQYJKoZIhvcNAQkDMQwGCisGAQQBgjcCAQQwHAYKKwYBBAGCNwIBCzEO
-# MAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIM22r0JeJlFv7Fx/8OJgxZzo
-# D/6ZC7Sv05T0wWonefdkMA0GCSqGSIb3DQEBAQUABIIBAAzZC+eSvS2J86WEAAMT
-# KV2I8JuLn5Qh22yRllMQcFXz3mWzEkS9O6WfAefhr1ZTOMvlQGct1HNsjn5ycPLA
-# 32O1EYrYUS2qDtfRAXdwobZuSnP3JnYbELUJEAynv7Z5WK1323SUPR5Mro52jqPh
-# hKh8UVXJ4Iv0Cq1+YnoTvII3yiLq3+ngJRnzaZIMSydWM8f5eIUHkc0sZxE5uJxy
-# Fld0BS6n+gipHwVY+VzatZfO4GEaRUWVQUcXQDf33mPFhwjjlyKWcOANbAAY4j9S
-# 0dQWoOwiI0f2oXx6um8sfGmH7KFyKZl6oghQC0cwggJSPOiGbxtWNHZA0Rs1IkPI
-# mHc=
+# MAwGCisGAQQBgjcCARUwLwYJKoZIhvcNAQkEMSIEIHTQZ4RwKNdCOC7QC+YHWOhw
+# JeLvpdgyX7KeMHYPyvi9MA0GCSqGSIb3DQEBAQUABIIBAHqaKVGuwFTLmSwBZzfu
+# m5ENOzV7ahIvzVXX8+Z8UsRBWj14mGomlVZa3Jqx4xSyxY1C1iSHg7RB4MKS2ONm
+# xUdAuMtRMKcSZSg7ZAx0QYAt+PI40nLWkA1z9C1l2s0arVx0kTo+Unma6DyZtvBP
+# Tu7gWcQPPJe6m+qrnLIvbuV45ywA26A7Li4tr8gOP8HjnDycSkMPlXyabV01enCs
+# Klzof7ZZz+a94JnFQjkkMw7DaXo2qlFRz2O1cJTqpNHyZsZt4N8x1vqNgEUN/m+T
+# tRJyAmmESeJIeieQuEukE2OlNm0LlhaeUjuzkATvIoYOKBDogYQ+4VbPwUq0f8Pl
+# zk4=
 # SIG # End signature block
