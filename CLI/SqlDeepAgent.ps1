@@ -376,19 +376,15 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage=".dapac file path to import")][ValidateNotNullOrEmpty()][string]$DacpacFilePath,
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString
         )
-        begin {
-            Write-Host ('Publish-DatabaseDacPac started.')
-            [bool]$myAnswer=$false;
-        }
+        begin {}
         process {
+            [bool]$myAnswer=$false;
             try
             {
-                if (Test-Path -Path $DacpacFilePath -PathType Leaf) {
-                    Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
-                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                if (Test-Path -Path $DacpacFilePath) {
+                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Diagnostics /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropConstraintsNotInSource=True /Properties:DropDmlTriggersNotInSource=True /Properties:DropExtendedPropertiesNotInSource=True /Properties:DropIndexesNotInSource=True /Properties:DropObjectsNotInSource=True /Properties:DropPermissionsNotInSource=False /Properties:DropRoleMembersNotInSource=False /Properties:DropStatisticsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreAuthorizer=False /Properties:IgnoreExtendedProperties=False /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=False /Properties:IgnoreRoleMembership=False /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                    #$null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
                     $myAnswer=$true
-                }else{
-                    Write-Error ('DacPac file ' +$DacpacFilePath+ ' does not found.')    
                 }
                 return $myAnswer
             }
@@ -400,8 +396,156 @@ param (
             }
             return $myAnswer;
         }
+        end {}
+    }
+    function Read-SqlQuery {
+        [OutputType([System.Data.DataTable])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$Query
+        )
+        begin {
+            $mySqlConnection = New-Object System.Data.SqlClient.SqlConnection($ConnectionString);
+            $mySqlCommand = $mySqlConnection.CreateCommand();
+            $mySqlDataAdapter = New-Object System.Data.SqlClient.SqlDataAdapter;
+            $myDataTable = New-Object System.Data.DataTable;
+            $mySqlConnection.Open(); 
+        }
+        process {
+            try
+            {
+                [System.Data.DataTable]$myAnswer=$null;
+                $mySqlCommand.CommandText = $Query;                      
+                $mySqlDataAdapter.SelectCommand = $mySqlCommand;
+                $null=$mySqlDataAdapter.Fill($myDataTable);
+                $myAnswer=$myDataTable;
+            }
+            catch
+            {       
+                $myAnswer=$null;
+                Write-Error($_.ToString());
+                Throw;
+            }
+            return $myAnswer;
+        }
         end {
-            Write-Host ('Publish-DatabaseDacPac finished.')
+            $mySqlCommand.Dispose();
+            $mySqlConnection.Close();
+            $mySqlConnection.Dispose();
+            #[System.Data.SqlClient.SqlConnection]::ClearAllPools();  
+        }
+    }
+    function Invoke-SqlCommand {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$Command
+        )
+        begin {
+            $mySqlConnection = New-Object System.Data.SqlClient.SqlConnection($ConnectionString);
+            $mySqlCommand = $mySqlConnection.CreateCommand();
+            $mySqlConnection.Open(); 
+        }
+        process {
+            [bool]$myAnswer=$false;
+            try
+            {
+                $mySqlCommand.CommandText = $Command;                      
+                $mySqlCommand.ExecuteNonQuery();
+                $myAnswer=$true;
+            }
+            catch
+            {       
+                $myAnswer=$false;
+                Write-Error($_.ToString());
+                Throw;
+            }
+            return $myAnswer;
+        }
+        end {
+            $mySqlCommand.Dispose();
+            $mySqlConnection.Close();
+            $mySqlConnection.Dispose();
+            #[System.Data.SqlClient.SqlConnection]::ClearAllPools();  
+        }
+    }
+    function Get-PrepublishSetting {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Script file path to export")][ValidateNotNullOrEmpty()][string]$ScriptFilePath
+        )
+        begin {
+            [bool]$myAnswer=$false;
+            [string]$myCommand="
+                SELECT 
+                    '
+                    BEGIN TRY
+                        EXEC sys.sp_addextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                    END TRY
+                    BEGIN CATCH
+                        EXEC sys.sp_updateextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                    END CATCH' AS Command
+                FROM 
+                    [sys].[extended_properties] AS myExtendedProperties
+                WHERE 
+                    [myExtendedProperties].[class] = 0
+                    AND [myExtendedProperties].[name] IN (
+                        '_AlwaysOnAlerts',
+                        '_AlwaysOnJobs',
+                        '_AlwaysOnLinkedServers',
+                        '_AlwaysOnOptions',
+                        '_BackupLocation',
+                        '_ShrinkLogToSizeMB',
+                        '_TempSnapLocation')
+            "
+        }
+        process {
+            try
+            {
+                if (Test-Path -Path $ScriptFilePath) {Remove-Item -Path $ScriptFilePath -Force}
+                $null=Read-SqlQuery -ConnectionString $ConnectionString -Query $myCommand | ForEach-Object{Add-Content -Path $ScriptFilePath -Value ($_.Command)}
+                if (Test-Path -Path $ScriptFilePath) {$myAnswer=$true}
+            }
+            catch
+            {       
+                $myAnswer=$false;
+                Write-Error($_.ToString());
+                Throw;
+            }
+        }
+        end {
+            return $myAnswer;
+        }
+    }
+    function Set-PostpublishSetting {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Script file path to import")][ValidateNotNullOrEmpty()][string]$ScriptFilePath
+        )
+        begin {
+            [bool]$myAnswer=$flase;
+            [string]$myCommand=$null
+        }
+        process {
+            try
+            {
+                if (Test-Path -Path $ScriptFilePath -PathType Leaf){
+                    $myCommand = Get-Content -Path $ScriptFilePath
+                    $null=Invoke-SqlCommand -ConnectionString $ConnectionString -Command $myCommand
+                    $myAnswer=$true
+                }
+            }
+            catch
+            {       
+                $myAnswer=$false;
+                Write-Error($_.ToString());
+                Throw;
+            }
+        }
+        end {
+            return $myAnswer;
         }
     }
     function Publish-DatabaseRepositoryScripts(){
@@ -539,9 +683,14 @@ param (
                 if ($null -ne $myRepositoryItems){
                     Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
                     $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+                        Write-Host ('Export PrePublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+                        Get-PrepublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
                         Write-Host ('Publishing DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
                         Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
                         Write-Host ('DatabaseDacPac file published.')
+                        Write-Host ('Import PostPublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+                        Start-Sleep -Seconds 10
+                        Set-PostpublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
                     }
                 }else{
                     Write-Host 'Catalog is empty.' -ForegroundColor Red
@@ -560,10 +709,6 @@ param (
             Write-Host ('Sync-SqlDeep finished.')
         }
     }
-#endregion
-
-#region Export
-#Export-ModuleMember -Function Sync-SqlDeep
 #endregion
 
 #<#SqlDeep-Comment
@@ -603,13 +748,17 @@ if ($CompareDatabaseModule) {
     }
 }
 if ($SyncDatabaseModule) {
-    Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
     if ($null -ne $myRepositoryItems){
         Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+            Write-Host ('Export PrePublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+            Get-PrepublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
             Write-Host ('Publishing DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
             Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
             Write-Host ('DatabaseDacPac file published.')
+            Write-Host ('Import PostPublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+            Start-Sleep -Seconds 10
+            Set-PostpublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
         }
     }else{
         Write-Host 'Catalog is empty.' -ForegroundColor Red
@@ -630,8 +779,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDAxX4/ODTCDmN2
-# RYWoEL9XxRwMWxVz1Vo1dJEC1NKv8aCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCB+HVSPLn8u7vsz
+# qsQJPMzsBrRp25wU1sIcqqlCx9UAUqCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -753,28 +902,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCByuj3VgY4Dx/ct1YQYeTDSncUWeNn1eOzdeRjlyr4eZjANBgkqhkiG9w0BAQEF
-# AASCAQDMqEia8/HRv0TYEENt4Kuk6H5sFOMvFM/VYAqaVtgXk+xcDVzACI6a2XJi
-# 26ePdeMs1FgHDrgQI2UA2s8tFF1tZ+n0hBA3KBUHbheXQXAV3vi2PlNHA9vduCg1
-# ACq5hHNh113Hhrv+wTMdA48BHvIM1oGyWIygFX+keMk2PMEXbwU0l2LQzi8NKntA
-# IcKaSAhJzAL99wkSG08vffWk0WKa8j2bx8Lpf77tB9wL9Jt6cuiVeepm63QBpDKD
-# nJHlzVMOvtJRX/RMISItus6dJrq1VXeTU31sXOFMewhPRycwzgOM4M1asdGhEIjk
-# PLn8a7KCo2pA0jE+ShDb2Aq5nALkoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCCrlCRZib0BBnfF41ieP9Ard97BfEW8ZVGuP9DVkyLQgTANBgkqhkiG9w0BAQEF
+# AASCAQDI0PR7R4lJntrB7VK7PFA/XOCSMU8DX14EOJBEwXSahCfrpGkaqW1IBre+
+# PVc4KGMtevwZ8Z29te3prTbiXrCVT22eCkkviCHtT0jBzwqrVR+OBnzQdlmXy91O
+# MsGvTxr8LygpgmABR5NNsyqF2RpmrFnb+XbvG2ijcnHW++6X9lux0iEXFhIyjZhj
+# tNHOQsCCB51TCGUlJrABoU1Cq6ad98CNQRz1mLbCff28WoWAJ1eVtR7z0TL4FqQA
+# fdyNTeOv0X29CJXkAZg0FFQi1VizND/KgKRfC3YG/kNVMTenDGI4ZgEmTaYHkowm
+# U39MtWdGEE+/v2Dg3rLueiFvr0bnoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExMjE2
-# NTc1MFowLwYJKoZIhvcNAQkEMSIEIIs3NHzOOX8hveKeZi4h0A8kuY3QzBD/meFP
-# XfDn3PcfMA0GCSqGSIb3DQEBAQUABIICACplqOJY4r77a6TwrFQaUNehIhXOvY4N
-# MyTCBmETVb1OzTFLbEzK569R05VHQLauv4XoxlMrsnTBKjU+2+gSJUw6pGHd1VN4
-# d6D+BeMC9W/dV9e6k9W8ANkAA+n5mszaljZiAq8ucoPaX2LoVHGCmmLoTg/ga8X8
-# N3YH/OnwKuSh6M+x0c58owqzAfxPxZhnd70fJ5GXjVDaX2yu4rI5pt0iSTWaCs8x
-# aGq3NoZg9Q5ufiVi/6zd62ds/m25IurMWkC2y5S4pKnTto9XhoBftidZI9IqVVDv
-# /fi9HV5nHn31wL2/tzFieU9yeqvQgWTZu3oDZcrIm4N261Lg3YZLKZx3NxD1mXAY
-# SmNVDFtDKculOvgfqfC0IcK8uDMAu1yrTMkhnOa6JGHQK3Bt+07dEMTCzXAgZZbU
-# YzIZCeiucoRp7oiZ1KMjqexEP75ivAaA0FO6nNkT08uZxsVi3aLXbPsX/N04TyRt
-# OslWRHOZaH5pHas+OIBmScUMrJx+dXBTbnd4P+f20lLgX8/Fzo+vOU6DvI9ICOHd
-# /SipBOI8mSYfFHrw0wkht/vBR7LgCj53XPWxhDL7I92uyCyTBwgEHQ45VEqJW2hj
-# vNrV3Zwl4/k/wcZnsu/AorMC280uqRRC5nugGwyPr8m1Dqw8bKWD+hnWY4ct9JjZ
-# QoSRVmqBhNt9
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExNTE5
+# NTY1OFowLwYJKoZIhvcNAQkEMSIEIGVg1wU5P/jem3zaQ3DU3MaLd5xPI7KKESO2
+# Bd2MV/q9MA0GCSqGSIb3DQEBAQUABIICADWu2EkiUW5W8bMhPLJATj7vWwLwxZBh
+# O8UG7HDEaCcOEi99HCbAH3DSvoUb6PsFDrbdg3YSA7GK/6Tio7O7kV4HR0ncC/2v
+# x5a2h5iSx99sgyv4KIUdBJc0d47YPr42O34N9PfdVm7PUUf1EPzGD+TBx2IBjD5Q
+# +bD77YNMybLUg1eDjok621nzrRY9cIGTVhhFyfmZP2+Fh1yOsgHbnaEY9t0RHOY8
+# VCHkMjHZj5hxriTFqMDcq8ROpIQVo2W1V4nWbQ6W6SeD/26ghfHX5aJl9smpVrk9
+# jhFHBJbcdwgXl8saoVLeQummUj2cllGh33BQS86qjTXjuCe+9NGAgTTNEgz//7b6
+# 8oTGlMxCfu2/sDsq/iT6nDJkJvK110AGKS/1cwyZd7nVnIer2w5omAKEJGrA1pK7
+# 4sa9Vnnm/oQtHbupBAyTXcpm4gv1RR9LuZrSiGofLyg6JyKIblXdsmCKRvUI92IL
+# WKb72yDHVpja0s1vTp4jM4LscLu8k9f+XAdfGoCozKW0JqBOhG/DP1d0uxO2rRQ/
+# c1MktoXJcVrpayIr3zLY8+DY4TQ5vyEK0AhhNcqZ07+YGjLobse8OR0Tqq3qVDWQ
+# UyxPZMyxqEXG2zG76CWkZeezTE0Tpbbw9EqD2R2XqCjikJhL5jtbXynPj4Vpvnqr
+# 5eqvc/YyLI8j
 # SIG # End signature block

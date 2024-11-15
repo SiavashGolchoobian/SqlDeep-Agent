@@ -1,9 +1,9 @@
 Using module 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-PowershellTools\SqlDeepDatabasePublisher.psm1'
 
 $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
-[string]$SqlDeepDbConnectionString2017='Data Source=172.18.3.49,2017;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=Armin1355$'
-[string]$SqlDeepDbConnectionString2019='Data Source=172.18.3.49,2019;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=Armin1355$'
-[string]$SqlDeepDbConnectionString2022='Data Source=172.18.3.49,2022;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=Armin1355$'
+[string]$SqlDeepDbConnectionString2017='Data Source=172.18.3.49,2017;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=P@$$W0rd'
+[string]$SqlDeepDbConnectionString2019='Data Source=172.18.3.49,2019;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=P@$$W0rd'
+[string]$SqlDeepDbConnectionString2022='Data Source=172.18.3.49,2022;Initial Catalog=SqlDeep;TrustServerCertificate=True;Encrypt=True;User=sa;Password=P@$$W0rd'
 [string]$SqlDeepDbDockerHostHomePath= '/home/siavash/sqldeep/'
 [string]$SqlDeepDbDockerContainerPath2017= '/var/opt/mssql/2017/backup/sqldeep'
 [string]$SqlDeepDbDockerContainerPath2019= '/var/opt/mssql/2019/backup/sqldeep'
@@ -31,14 +31,14 @@ $mySqlPackageFolderPath=(Get-Item -Path $mySqlPackageFilePath).DirectoryName
 $mySqlPackageFolderPath=Clear-FolderPath -FolderPath $mySqlPackageFolderPath
 if (-not ($env:Path).Contains($mySqlPackageFolderPath)) {$env:path = $env:path + ';'+$mySqlPackageFolderPath+';'}
 Write-Host 'Export Source Database dacpac'
-Export-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2019 -DacpacFilePath ($SqlDeepProjectReleasePath+'\SqlDeep.dacpac')
+Export-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2019 -DacpacFilePath ($SqlDeepProjectReleasePath+'\SqlDeepDatabase.dacpac')
 
 #-----Sync dac pack file with other SqlDeep Versions
 Write-Host 'Sync dac pack file with other SqlDeep Versions'
-Publish-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2017 -DacpacFilePath ($SqlDeepProjectReleasePath+'\SqlDeep.dacpac')
-Publish-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2022 -DacpacFilePath ($SqlDeepProjectReleasePath+'\SqlDeep.dacpac')
+Publish-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2017 -DacpacFilePath ($SqlDeepProjectReleasePath+'\SqlDeepDatabase.dacpac')
+Publish-DatabaseDacPac -ConnectionString $SqlDeepDbConnectionString2022 -DacpacFilePath ($SqlDeepProjectReleasePath+'\SqlDeepDatabase.dacpac')
 
-#-----Upload file(s) to sqldeep refrence(s) databases
+#-----Backup sqldeep databases
 Write-Host 'Backup sqldeep database'
 [string]$myQuery="USE [master]; BACKUP DATABASE [SqlDeep] TO DISK=N'/var/opt/mssql/backup/sqldeep/SqlDeep{version}.bak' WITH NOFORMAT, INIT,  NAME = N'SqlDeep-Full Database Backup', SKIP, NOREWIND, NOUNLOAD, COMPRESSION, CHECKSUM"
 Invoke-Sqlcmd -ConnectionString $SqlDeepDbConnectionString2017 -Query ($myQuery.Replace('{version}','2017'))

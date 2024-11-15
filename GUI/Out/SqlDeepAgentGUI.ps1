@@ -935,19 +935,15 @@ SqlDeep-Comment#>
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage=".dapac file path to import")][ValidateNotNullOrEmpty()][string]$DacpacFilePath,
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString
         )
-        begin {
-            Write-Host ('Publish-DatabaseDacPac started.')
-            [bool]$myAnswer=$false;
-        }
+        begin {}
         process {
+            [bool]$myAnswer=$false;
             try
             {
-                if (Test-Path -Path $DacpacFilePath -PathType Leaf) {
-                    Write-Host ('Publish DatabaseDacPac file ' + $DacpacFilePath) -ForegroundColor Green
-                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                if (Test-Path -Path $DacpacFilePath) {
+                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Diagnostics /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropConstraintsNotInSource=True /Properties:DropDmlTriggersNotInSource=True /Properties:DropExtendedPropertiesNotInSource=True /Properties:DropIndexesNotInSource=True /Properties:DropObjectsNotInSource=True /Properties:DropPermissionsNotInSource=False /Properties:DropRoleMembersNotInSource=False /Properties:DropStatisticsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreAuthorizer=False /Properties:IgnoreExtendedProperties=False /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=False /Properties:IgnoreRoleMembership=False /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                    #$null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
                     $myAnswer=$true
-                }else{
-                    Write-Error ('DacPac file ' +$DacpacFilePath+ ' does not found.')    
                 }
                 return $myAnswer
             }
@@ -959,8 +955,156 @@ SqlDeep-Comment#>
             }
             return $myAnswer;
         }
+        end {}
+    }
+    function Read-SqlQuery {
+        [OutputType([System.Data.DataTable])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$Query
+        )
+        begin {
+            $mySqlConnection = New-Object System.Data.SqlClient.SqlConnection($ConnectionString);
+            $mySqlCommand = $mySqlConnection.CreateCommand();
+            $mySqlDataAdapter = New-Object System.Data.SqlClient.SqlDataAdapter;
+            $myDataTable = New-Object System.Data.DataTable;
+            $mySqlConnection.Open(); 
+        }
+        process {
+            try
+            {
+                [System.Data.DataTable]$myAnswer=$null;
+                $mySqlCommand.CommandText = $Query;                      
+                $mySqlDataAdapter.SelectCommand = $mySqlCommand;
+                $null=$mySqlDataAdapter.Fill($myDataTable);
+                $myAnswer=$myDataTable;
+            }
+            catch
+            {       
+                $myAnswer=$null;
+                Write-Error($_.ToString());
+                Throw;
+            }
+            return $myAnswer;
+        }
         end {
-            Write-Host ('Publish-DatabaseDacPac finished.')
+            $mySqlCommand.Dispose();
+            $mySqlConnection.Close();
+            $mySqlConnection.Dispose();
+            #[System.Data.SqlClient.SqlConnection]::ClearAllPools();  
+        }
+    }
+    function Invoke-SqlCommand {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Input string to cleanup")][ValidateNotNullOrEmpty()][string]$Command
+        )
+        begin {
+            $mySqlConnection = New-Object System.Data.SqlClient.SqlConnection($ConnectionString);
+            $mySqlCommand = $mySqlConnection.CreateCommand();
+            $mySqlConnection.Open(); 
+        }
+        process {
+            [bool]$myAnswer=$false;
+            try
+            {
+                $mySqlCommand.CommandText = $Command;                      
+                $mySqlCommand.ExecuteNonQuery();
+                $myAnswer=$true;
+            }
+            catch
+            {       
+                $myAnswer=$false;
+                Write-Error($_.ToString());
+                Throw;
+            }
+            return $myAnswer;
+        }
+        end {
+            $mySqlCommand.Dispose();
+            $mySqlConnection.Close();
+            $mySqlConnection.Dispose();
+            #[System.Data.SqlClient.SqlConnection]::ClearAllPools();  
+        }
+    }
+    function Get-PrepublishSetting {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Script file path to export")][ValidateNotNullOrEmpty()][string]$ScriptFilePath
+        )
+        begin {
+            [bool]$myAnswer=$false;
+            [string]$myCommand="
+                SELECT 
+                    '
+                    BEGIN TRY
+                        EXEC sys.sp_addextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                    END TRY
+                    BEGIN CATCH
+                        EXEC sys.sp_updateextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                    END CATCH' AS Command
+                FROM 
+                    [sys].[extended_properties] AS myExtendedProperties
+                WHERE 
+                    [myExtendedProperties].[class] = 0
+                    AND [myExtendedProperties].[name] IN (
+                        '_AlwaysOnAlerts',
+                        '_AlwaysOnJobs',
+                        '_AlwaysOnLinkedServers',
+                        '_AlwaysOnOptions',
+                        '_BackupLocation',
+                        '_ShrinkLogToSizeMB',
+                        '_TempSnapLocation')
+            "
+        }
+        process {
+            try
+            {
+                if (Test-Path -Path $ScriptFilePath) {Remove-Item -Path $ScriptFilePath -Force}
+                $null=Read-SqlQuery -ConnectionString $ConnectionString -Query $myCommand | ForEach-Object{Add-Content -Path $ScriptFilePath -Value ($_.Command)}
+                if (Test-Path -Path $ScriptFilePath) {$myAnswer=$true}
+            }
+            catch
+            {       
+                $myAnswer=$false;
+                Write-Error($_.ToString());
+                Throw;
+            }
+        }
+        end {
+            return $myAnswer;
+        }
+    }
+    function Set-PostpublishSetting {
+        [OutputType([bool])]
+        param (
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
+            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Script file path to import")][ValidateNotNullOrEmpty()][string]$ScriptFilePath
+        )
+        begin {
+            [bool]$myAnswer=$flase;
+            [string]$myCommand=$null
+        }
+        process {
+            try
+            {
+                if (Test-Path -Path $ScriptFilePath -PathType Leaf){
+                    $myCommand = Get-Content -Path $ScriptFilePath
+                    $null=Invoke-SqlCommand -ConnectionString $ConnectionString -Command $myCommand
+                    $myAnswer=$true
+                }
+            }
+            catch
+            {       
+                $myAnswer=$false;
+                Write-Error($_.ToString());
+                Throw;
+            }
+        }
+        end {
+            return $myAnswer;
         }
     }
     function Publish-DatabaseRepositoryScripts(){
@@ -1098,9 +1242,14 @@ SqlDeep-Comment#>
                 if ($null -ne $myRepositoryItems){
                     Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
                     $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+                        Write-Host ('Export PrePublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+                        Get-PrepublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
                         Write-Host ('Publishing DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
                         Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
                         Write-Host ('DatabaseDacPac file published.')
+                        Write-Host ('Import PostPublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+                        Start-Sleep -Seconds 10
+                        Set-PostpublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
                     }
                 }else{
                     Write-Host 'Catalog is empty.' -ForegroundColor Red
@@ -1119,10 +1268,6 @@ SqlDeep-Comment#>
             Write-Host ('Sync-SqlDeep finished.')
         }
     }
-#endregion
-
-#region Export
-#Export-ModuleMember -Function Sync-SqlDeep
 #endregion
 
 <#SqlDeep-Comment
@@ -1162,13 +1307,17 @@ if ($CompareDatabaseModule) {
     }
 }
 if ($SyncDatabaseModule) {
-    Write-Host 'SyncDatabaseModule ...' -ForegroundColor Green
     if ($null -ne $myRepositoryItems){
         Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
+            Write-Host ('Export PrePublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+            Get-PrepublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
             Write-Host ('Publishing DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
             Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
             Write-Host ('DatabaseDacPac file published.')
+            Write-Host ('Import PostPublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+            Start-Sleep -Seconds 10
+            Set-PostpublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
         }
     }else{
         Write-Host 'Catalog is empty.' -ForegroundColor Red

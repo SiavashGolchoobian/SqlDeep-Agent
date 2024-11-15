@@ -19,7 +19,7 @@
       "SqlDeepDatabase": [
         {
           "name": "SqlDeepDatabase.dacpac",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeep.dacpac",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep/raw/refs/heads/main/Assets/Release/Latest/SqlDeepDatabase.dacpac",
           "description": "The SqlDeep database project that contains many useful features for database administrators."
         }
       ],
