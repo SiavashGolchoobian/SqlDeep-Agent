@@ -85,17 +85,17 @@ param (
         )
         begin{
             #Create SaveToFolderPath if not exists
-            Write-Host ('Download-File started.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Download-File started.')
             [bool]$myAnswer=$false
             if((Test-Path -Path $FolderPath) -eq $false) {
-                Write-Host ('Creating destination folder named ' + $FolderPath)
+                Write-Host ((Get-Date).ToString() + "`t" + 'Creating destination folder named ' + $FolderPath)
                 New-Item -ItemType Directory -Path $FolderPath -Force
             }
         }
         process{
             try {
                 if((Test-Path -Path $FolderPath) -eq $true) {
-                    Write-Host ('Downloading ' + $URI)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Downloading ' + $URI) -ForegroundColor Yellow
                     Invoke-WebRequest -Uri $URI -OutFile ($FolderPath+'\'+$FileName)
                     $myAnswer=(Test-Path -Path ($FolderPath+'\'+$FileName))
                 }else{
@@ -107,7 +107,7 @@ param (
             return $myAnswer
         }
         end{
-            Write-Host ('Download-File finished.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Download-File finished.')
         }
     }
     function Find-SqlPackageLocation {
@@ -144,8 +144,7 @@ param (
             [Parameter(Mandatory=$false,HelpMessage="Force function to return this path as SqlPackage.exe file path, if exists.")]$SqlPackageFilePath
         )
         begin {
-            Write-Host ('Find-SqlPackageLocation started.')
-            Write-Host ('Find-SqlPackageLocation called with ' + $SqlPackageFilePath)
+            Write-Host ((Get-Date).ToString() + "`t" + 'Find-SqlPackageLocation called with ' + $SqlPackageFilePath)
             [string]$myAnswer=$null
             [string]$myExeName = "SqlPackage.exe";
             [string]$mySqlPackageFilePath=$null;
@@ -176,13 +175,13 @@ param (
                 [string]$myCurrentVersion=''
                 foreach ($mySqlPackageExe in $mySqlPackageExes) {
                     $myProductVersion = $mySqlPackageExe.VersionInfo.ProductVersion.Substring(0,2);
-                    Write-Host ('Product Version is ' + $myCurrentVersion + ' and Currently loaded version is ' + $myProductVersion)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Product Version is ' + $myCurrentVersion + ' and Currently loaded version is ' + $myProductVersion)
                     if ($myProductVersion -gt $myCurrentVersion){
                         $myCurrentVersion=$myProductVersion
                         $myAnswer=$mySqlPackageExe
-                        Write-Host ('Product Version changes to ' + $myCurrentVersion)
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Product Version changes to ' + $myCurrentVersion)
                     }
-                    Write-Host ($myProductVersion + ' ' + $mySqlPackageExe);
+                    Write-Host ((Get-Date).ToString() + "`t" + $myProductVersion + ' ' + $mySqlPackageExe);
                 } 
             }
             catch {
@@ -192,12 +191,12 @@ param (
             if ($null -ne $SqlPackageFilePath -and ($SqlPackageFilePath.Length) -ge 10) {
                 if (Test-Path -Path $SqlPackageFilePath -PathType Leaf) {
                     $myAnswer=$SqlPackageFilePath
-                    Write-Host ('User defined SqlPackageFilePath that send by caller was used with path: ' + $myAnswer)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'User defined SqlPackageFilePath that send by caller was used with path: ' + $myAnswer)
                 }else{
-                    Write-Host ('User defined SqlPackageFilePath parameter path does not exists' + $SqlPackageFilePath)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'User defined SqlPackageFilePath parameter path does not exists' + $SqlPackageFilePath) -ForegroundColor Red
                 }
             }else{
-                Write-Host ('User defined SqlPackageFilePath parameter is null or empty' + $SqlPackageFilePath + ', file length is ' + $SqlPackageFilePath.Length.ToString())
+                Write-Host ((Get-Date).ToString() + "`t" + 'User defined SqlPackageFilePath parameter is null or empty' + $SqlPackageFilePath + ', file length is ' + $SqlPackageFilePath.Length.ToString()) -ForegroundColor Yellow
             }
             if ($myAnswer) {
                 $mySqlPackageFilePath=$myAnswer
@@ -205,14 +204,14 @@ param (
                 $mySqlPackageFolderPath=Clear-FolderPath -FolderPath $mySqlPackageFolderPath
                 if (-not ($env:Path).Contains($mySqlPackageFolderPath)) {$env:path = $env:path + ';'+$mySqlPackageFolderPath+';'}
             }
-            Write-Host $myAnswer
+            Write-Host ((Get-Date).ToString() + "`t" + $myAnswer)
             return $myAnswer
         }
         end {
             if ($null -eq $myAnswer) {
                 Write-Host 'DacPac module does not found, please Downloaded and install it from official site https://learn.microsoft.com/en-us/sql/tools/sqlpackage/sqlpackage-download?view=sql-server-ver16 or install informal version from https://www.powershellgallery.com/packages/PublishDacPac/ or run this command in powershell console: Install-Module -Name PublishDacPac'
             }
-            Write-Host ('Find-SqlPackageLocation finished.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Find-SqlPackageLocation finished.')
         }
     }
     function Validate-Signature {
@@ -221,15 +220,15 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="File path")][ValidateNotNullOrEmpty()][string]$FilePath
         )
         begin{
-            Write-Host ('Validate-Signature started.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Validate-Signature started.')
             [bool]$myAnswer=$false
             $myInstalledCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
         }
         process{
-            Write-Host ('Check signature of file ' + $FilePath)
+            Write-Host ((Get-Date).ToString() + "`t" + 'Check signature of file ' + $FilePath)
             $mySignerCertificate=Get-AuthenticodeSignature -FilePath $FilePath
             if ($mySignerCertificate.Status -notin ('Valid','UnknownError') -or $mySignerCertificate.SignerCertificate.Thumbprint -ne $myInstalledCertificate.Thumbprint) {
-                Write-Host ('Signature is not valid for ' + $FilePath + ' file' )
+                Write-Host ((Get-Date).ToString() + "`t" + 'Signature is not valid for ' + $FilePath + ' file' )
                 $myAnswer=$false
             } else {
                 $myAnswer=$true
@@ -237,7 +236,7 @@ param (
             return $myAnswer
         }
         end{
-            Write-Host ('Validate-Signature finished.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Validate-Signature finished.')
         }
     }
     function Download-RepositoryItems(){
@@ -246,7 +245,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path to save downloaded items")][string]$LocalRepositoryPath
         )
         begin{
-            Write-Host ('Download-RepositoryItems started.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Download-RepositoryItems started.')
             #===============Parameters
             [string]$mySqlDeepOfficialCatalogURI=$null;
             [string]$mySqlDeepOfficialCatalogFilename=$null;
@@ -260,7 +259,7 @@ param (
             if ($LocalRepositoryPath[-1] -eq '\') {$LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)}
             $myLocalRepositoryArchivePath=$LocalRepositoryPath+'\Archive\'+(Get-Date -Format "yyyyMMdd_HHmmss").ToString()
             if((Test-Path -Path $myLocalRepositoryArchivePath) -eq $false) {
-                Write-Host ('Creating archive folder named ' + $myLocalRepositoryArchivePath)
+                Write-Host ((Get-Date).ToString() + "`t" + 'Creating archive folder named ' + $myLocalRepositoryArchivePath)
                 $null = New-Item -ItemType Directory -Path $myLocalRepositoryArchivePath -Force
             }
             $myWebRepositoryItem=[WebRepositoryItem]::New([SqlDeepRepositoryItemCategory]::SqlDeepCatalog,$mySqlDeepOfficialCatalogURI,$LocalRepositoryPath,$mySqlDeepOfficialCatalogFilename,'This file contains standard SqlDeep catalog items to download.')
@@ -270,7 +269,7 @@ param (
             #Download Catalog file(s)
             $null = $myWebRepositoryCollection | Where-Object -Property Category -eq SqlDeepCatalog | ForEach-Object{
                 if (Test-Path -Path ($_.FilePath()) -PathType Leaf){
-                    Write-Host ('Move old file ' + ($_.FilePath()) + ' to ' + $myLocalRepositoryArchivePath)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Move old file ' + ($_.FilePath()) + ' to ' + $myLocalRepositoryArchivePath)
                     $null = Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
                 }
                 Download-File -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
@@ -286,7 +285,7 @@ param (
             #Download non-catalog type Repository Contents
             $null = $myWebRepositoryCollection | Where-Object -Property Category -ne SqlDeepCatalog | ForEach-Object{
                 if (Test-Path -Path ($_.FilePath()) -PathType Leaf) {
-                    Write-Host ('Move old file ' + ($_.FilePath()) + ' to ' + $myLocalRepositoryArchivePath)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Move old file ' + ($_.FilePath()) + ' to ' + $myLocalRepositoryArchivePath)
                     $null = Move-Item -Path ($_.FilePath()) -Destination $myLocalRepositoryArchivePath -Force
                 }
                 $null = Download-File -URI ($_.FileURI) -FolderPath ($_.LocalFolderPath) -FileName ($_.LocalFileName)
@@ -294,7 +293,7 @@ param (
             #Validate all files are downloaded and validate their signatures
             foreach ($myWebRepositoryItem in ($myWebRepositoryCollection | Where-Object -Property LocalFileName -Match '.ps1|.psm1')) {
                 if ((Validate-Signature -FilePath ($myWebRepositoryItem.FilePath())) -eq $false){
-                    Write-Host ('because of invalid signature file was removed.' )
+                    Write-Host ((Get-Date).ToString() + "`t" + 'because of invalid signature file was removed.' ) -ForegroundColor Red
                     $myWebRepositoryItem.IsValid=$false
                     $null = Remove-Item -Path ($myWebRepositoryItem.FilePath()) -Force
                 } 
@@ -306,9 +305,9 @@ param (
                 $null = Move-Item -Path ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Destination $myLocalRepositoryArchivePath -Force 
             }
             $null = $myWebRepositoryCollection | Where-Object {$_.IsValid -eq $true -and $_.Category -ne 'SqlDeepCatalog'} | Select-Object -Property Category,LocalFileName,Description | Sort-Object -Property Category,LocalFileName | ForEach-Object{$myAnswer+=[RepositoryItem]::New($_.Category,$_.LocalFileName,$_.Description)}
-            Write-Host ('Save RepositoryItems catalog to ' + ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result'))
+            Write-Host ((Get-Date).ToString() + "`t" + 'Save RepositoryItems catalog to ' + ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result'))
             $null = $myAnswer | ConvertTo-Json | Out-File -FilePath ($LocalRepositoryPath+'\'+$mySqlDeepOfficialCatalogFilename+'.result') -Force
-            Write-Host ('Download-RepositoryItems finished.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Download-RepositoryItems finished.')
             return $myAnswer
         }
     }
@@ -318,7 +317,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file")][ValidateNotNullOrEmpty()][string]$FilePath
         )
         begin{
-            Write-Host ('ConvertFrom-RepositoryItemsFile started.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'ConvertFrom-RepositoryItemsFile started.')
             [RepositoryItem[]]$myAnswer=$null
         }
         process{
@@ -555,7 +554,7 @@ param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems")]$SqlDeepRepositoryItems
         )
         begin{
-            Write-Host ('Publish-DatabaseRepositoryScripts started.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Publish-DatabaseRepositoryScripts started.')
             [string]$myItemExtension=$null;
             [string]$myItemType=$null;
             [SqlDeepRepositoryItemCategory[]]$myAcceptedCategories=@();
@@ -581,7 +580,7 @@ param (
         process{
             if ($null -ne $SqlDeepRepositoryItems){
                 foreach($mySqlDeepRepositoryItem in ($SqlDeepRepositoryItems|Where-Object -Property Category -In $myAcceptedCategories)){
-                    Write-Host ('Publish Repository file ' + $mySqlDeepRepositoryItem.FileName)
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Publish Repository file ' + $mySqlDeepRepositoryItem.FileName)
                     $myItemExtension=$mySqlDeepRepositoryItem.FileName.Split('.')[-1].ToUpper()
                     $myItemType=SWITCH($myItemExtension) {
                         'PSM1'  {'OTHER'}
@@ -592,7 +591,7 @@ param (
                     try {
                         #Validate file signatures
                         if ($myItemExtension -in ('PSM1','PS1') -and (Validate-Signature -FilePath ($mySqlDeepRepositoryItem.FilePath($LocalRepositoryPath))) -eq $false){
-                            Write-Host ('Because of invalid signature this file was skipped.' )
+                            Write-Host ((Get-Date).ToString() + "`t" + 'Because of invalid signature this file was skipped.' ) -ForegroundColor Red
                         } else {
                             #Get the file
                             [int]$myPowershellVersion=($PSVersionTable.PSVersion.Major)
@@ -642,8 +641,7 @@ param (
             [Parameter(Mandatory=$false)][Switch]$SyncScriptRepository
         )
         begin{
-            Write-Host ('Sync-SqlDeep started.')
-            Write-Host ('Sync-SqlDeep called with parameter '+$SqlPackageFilePath)
+            Write-Host ((Get-Date).ToString() + "`t" + 'SqlDeep synchronizer module started.')
             if ($LocalRepositoryPath[-1] -eq '\'){
                 $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
             }
@@ -652,67 +650,77 @@ param (
             [RepositoryItem[]]$myRepositoryItems=$null
             [string]$myReportFilePath=$null
             if ($DownloadAssets) {
-                Write-Host 'Download ...' -ForegroundColor Green
+                Write-Host ((Get-Date).ToString() + "`t" + 'Downloading assets from web ...') -ForegroundColor Green
                 $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
             }else{
-                Write-Host ('Load Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+                Write-Host ((Get-Date).ToString() + "`t" + 'Loading downloaded asstes from catalog file on '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...') -ForegroundColor Green
                 $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
             }
             if ($CompareDatabaseModule -or $SyncDatabaseModule) {
+                Write-Host ((Get-Date).ToString() + "`t" + 'Try to locating latest or alternative version of sqlpackage.exe') -ForegroundColor Green
                 if ($null -ne (Find-SqlPackageLocation -SqlPackageFilePath $SqlPackageFilePath )) {
-	                Write-Host 'DacPac binaries founded.'
+	                Write-Host 'DacPac binaries founded.'Write-Host ((Get-Date).ToString() + "`t" + 'sqlpackage.exe located.')
                 }else{
-                    Write-Error 'DacPac binaries does not found. please install dacpac binaries.'
+                    Write-Error ((Get-Date).ToString() + "`t" + 'sqlpackage.exe does not found. please install dacpac binaries.')
                 }
             }
             if ($CompareDatabaseModule) {
-                Write-Host 'CompareDatabaseModule ...' -ForegroundColor Green
+                Write-Host ((Get-Date).ToString() + "`t" + 'Comparing downloaded Database with "'+ $ConnectionString +'" ...') -ForegroundColor Green
                 if ($null -ne $myRepositoryItems){
-                    Write-Host 'Generate Diff Report ...' -ForegroundColor Green
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Generating report ...')
                     $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
                         $myReportFilePath=$LocalRepositoryPath + '\' + $_.FileName + (Get-Date -Format "yyyyMMdd_HHmmss").ToString() + '.report.xml';
-                        Write-Host ('Generating DatabaseDacPac report to file ' + $myReportFilePath) -ForegroundColor Green;
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Try to creating report on file ' + $myReportFilePath);
                         Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath $myReportFilePath;
-                        Write-Host ('DatabaseDacPac report was generated on file ' + $myReportFilePath) -ForegroundColor Green;
+                        if (Test-Path -Path $myReportFilePath -PathType Leaf) {
+                            Write-Host ((Get-Date).ToString() + "`t" + 'Report was saved on ' + $myReportFilePath) -ForegroundColor Yellow;
+                        }else{
+                            Write-Host ((Get-Date).ToString() + "`t" + 'Failed to creating report.') -ForegroundColor Red;
+                        }
                     }
                 }else{
-                    Write-Host 'Catalog is empty.' -ForegroundColor Red
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Catalog file is empty.') -ForegroundColor Red
                 }
             }
             if ($SyncDatabaseModule) {
+                Write-Host ((Get-Date).ToString() + "`t" + 'Publishing new Database version to "'+ $ConnectionString +'" ...') -ForegroundColor Green
                 if ($null -ne $myRepositoryItems){
-                    Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Publish DatabaseDacPac ...')
                     $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-                        Write-Host ('Export PrePublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Initializing post script file(s) on ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql');
                         Get-PrepublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
-                        Write-Host ('Publishing DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Publishing .dacPac file ' + $LocalRepositoryPath + '\' + $_.FileName + ' started.');
                         Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
-                        Write-Host ('DatabaseDacPac file published.')
-                        Write-Host ('Import PostPublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Publishing .dacPac file finished.')
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Executing post script file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql');
                         Start-Sleep -Seconds 10
                         Set-PostpublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
+                        Write-Host ((Get-Date).ToString() + "`t" + 'Post script execution finished.');
                     }
                 }else{
-                    Write-Host 'Catalog is empty.' -ForegroundColor Red
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Catalog file is empty.') -ForegroundColor Red
                 }
             }
             if ($SyncScriptRepository) {
+                Write-Host ((Get-Date).ToString() + "`t" + 'Syncing local script repository table on "'+$ConnectionString+'" with refrence ...') -ForegroundColor Green
                 if ($null -ne $myRepositoryItems){
-                    Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Publishing repository items started ...')
                     Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Publishing repository items finished.')
                 }else{
-                    Write-Host 'Catalog is empty.' -ForegroundColor Red
+                    Write-Host ((Get-Date).ToString() + "`t" + 'Catalog file is empty.') -ForegroundColor Red
                 }
             }
         }
         end{
-            Write-Host ('Sync-SqlDeep finished.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'SqlDeep synchronizer module ended.')
         }
     }
 #endregion
 
 #<#SqlDeep-Comment
 #---------MAIN
+Write-Host ((Get-Date).ToString() + "`t" + 'SqlDeep synchronizer module started.')
 if ($LocalRepositoryPath[-1] -eq '\'){
     $LocalRepositoryPath=$LocalRepositoryPath.Substring(0,$LocalRepositoryPath.Length-1)
 }
@@ -720,68 +728,75 @@ if ($LocalRepositoryPath[-1] -eq '\'){
 [string]$myReportFilePath=$null
 
 if ($DownloadAssets) {
-    Write-Host 'Download ...' -ForegroundColor Green
+    Write-Host ((Get-Date).ToString() + "`t" + 'Downloading assets from web ...') -ForegroundColor Green
     $myRepositoryItems=Download-RepositoryItems -LocalRepositoryPath $LocalRepositoryPath
 }else{
-    Write-Host ('Load Catalog from '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...')
+    Write-Host ((Get-Date).ToString() + "`t" + 'Loading downloaded asstes from catalog file on '+ ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName) +' ...') -ForegroundColor Green
     $myRepositoryItems=ConvertFrom-RepositoryItemsFile -FilePath ($LocalRepositoryPath+'\'+$SqlDeepRepositoryItemsFileName)
 }
 if ($CompareDatabaseModule -or $SyncDatabaseModule) {
+    Write-Host ((Get-Date).ToString() + "`t" + 'Try to locating latest or alternative version of sqlpackage.exe') -ForegroundColor Green
     if ($null -ne (Find-SqlPackageLocation -SqlPackageFilePath $SqlPackageFilePath )) {
-        Write-Host 'DacPac binaries founded.'
+        Write-Host ((Get-Date).ToString() + "`t" + 'sqlpackage.exe located.')
     }else{
-        Write-Error 'DacPac binaries does not found. please install dacpac binaries.'
+        Write-Error ((Get-Date).ToString() + "`t" + 'sqlpackage.exe does not found. please install dacpac binaries.')
     }
 }
 if ($CompareDatabaseModule) {
-    Write-Host 'CompareDatabaseModule ...' -ForegroundColor Green
+    Write-Host ((Get-Date).ToString() + "`t" + 'Comparing downloaded Database with "'+ $ConnectionString +'" ...') -ForegroundColor Green
     if ($null -ne $myRepositoryItems){
-        Write-Host 'Generate Diff Report ...' -ForegroundColor Green
+        Write-Host ((Get-Date).ToString() + "`t" + 'Generating report ...')
         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
             $myReportFilePath=($LocalRepositoryPath + '\' + $_.FileName + (Get-Date -Format "yyyyMMdd_HHmmss").ToString() + '.report.xml');
-            Write-Host ('Generating DatabaseDacPac report to file ' + $myReportFilePath) -ForegroundColor Green;
+            Write-Host ((Get-Date).ToString() + "`t" + 'Try to creating report on file ' + $myReportFilePath);
             Get-PrePublishReport -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString -ReportFilePath $myReportFilePath;
-            Write-Host ('DatabaseDacPac report was generated on file ' + $myReportFilePath) -ForegroundColor Green;
+            if (Test-Path -Path $myReportFilePath -PathType Leaf) {
+                Write-Host ((Get-Date).ToString() + "`t" + 'Report was saved on ' + $myReportFilePath) -ForegroundColor Yellow;
+            }else{
+                Write-Host ((Get-Date).ToString() + "`t" + 'Failed to creating report.') -ForegroundColor Red;
+            }
         }
     }else{
-        Write-Host 'Catalog is empty.' -ForegroundColor Red
+        Write-Host ((Get-Date).ToString() + "`t" + 'Catalog file is empty.') -ForegroundColor Red
     }
 }
 if ($SyncDatabaseModule) {
+    Write-Host ((Get-Date).ToString() + "`t" + 'Publishing new Database version to "'+ $ConnectionString +'" ...') -ForegroundColor Green
     if ($null -ne $myRepositoryItems){
-        Write-Host 'Publish DatabaseDacPac ...' -ForegroundColor Green
+        Write-Host ((Get-Date).ToString() + "`t" + 'Publish DatabaseDacPac ...')
         $null=$myRepositoryItems | Where-Object -Property Category -eq SqlDeepDatabase | ForEach-Object{
-            Write-Host ('Export PrePublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+            Write-Host ((Get-Date).ToString() + "`t" + 'Initializing post script file(s) on ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql');
             Get-PrepublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
-            Write-Host ('Publishing DatabaseDacPac file ' + $LocalRepositoryPath + '\' + $_.FileName) -ForegroundColor Green;
+            Write-Host ((Get-Date).ToString() + "`t" + 'Publishing .dacPac file ' + $LocalRepositoryPath + '\' + $_.FileName + ' started.');
             Publish-DatabaseDacPac -DacpacFilePath ($LocalRepositoryPath+'\'+$_.FileName) -ConnectionString $ConnectionString;
-            Write-Host ('DatabaseDacPac file published.')
-            Write-Host ('Import PostPublishing Database settings file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql') -ForegroundColor Green;
+            Write-Host ((Get-Date).ToString() + "`t" + 'Publishing .dacPac file finished.')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Executing post script file ' + $LocalRepositoryPath + '\' + $_.FileName + '.tsql');
             Start-Sleep -Seconds 10
             Set-PostpublishSetting -ConnectionString $ConnectionString -ScriptFilePath ($LocalRepositoryPath+'\' + $_.FileName + '.tsql')
+            Write-Host ((Get-Date).ToString() + "`t" + 'Post script execution finished.');
         }
     }else{
-        Write-Host 'Catalog is empty.' -ForegroundColor Red
+        Write-Host ((Get-Date).ToString() + "`t" + 'Catalog file is empty.') -ForegroundColor Red
     }
 }
 if ($SyncScriptRepository) {
-    Write-Host 'SyncScriptRepository ...' -ForegroundColor Green
+    Write-Host ((Get-Date).ToString() + "`t" + 'Syncing local script repository table on "'+$ConnectionString+'" with refrence ...') -ForegroundColor Green
     if ($null -ne $myRepositoryItems){
-        Write-Host 'Publish DatabaseRepositoryScripts ...' -ForegroundColor Green
+        Write-Host ((Get-Date).ToString() + "`t" + 'Publishing repository items started ...')
         Publish-DatabaseRepositoryScripts -LocalRepositoryPath $LocalRepositoryPath -ConnectionString $ConnectionString -SqlDeepRepositoryItems $myRepositoryItems
+        Write-Host ((Get-Date).ToString() + "`t" + 'Publishing repository items finished.')
     }else{
-        Write-Host 'Catalog is empty.' -ForegroundColor Red
+        Write-Host ((Get-Date).ToString() + "`t" + 'Catalog file is empty.') -ForegroundColor Red
     }
 }
 #SqlDeep-Comment#>
 
 
-
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDsnzL//EadGcLr
-# LahK9K+p8IQstxRyShgbHqOd1wYIJ6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCA9cCf/XFsdcO7v
+# ZGcNghbOsZG4G2IdD4RzwVhSlLuzeaCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -903,28 +918,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCALY1ZQfXzTHYD+v5UcdFh9tc7ai9E/qSNwqbkh3tTmbTANBgkqhkiG9w0BAQEF
-# AASCAQBZvuWZ6sn5sMwvpfebsEuj0ydfAtMpMfdGYYlPQgZ21tgCHW94VhVHQSD4
-# C7+aDd4jyfN1nvBZ41duDRMqKBJ54wPYhdqR19KlBY6+5CTqAMY347UtfIYUw6DD
-# vpusCuzFLLm0PmmWJxcBWzJewKYYqoyz2MsA52ZbK0Kpz91MBzDhb5LoaMa0qTK/
-# k95pdylvw7/RXeucbyGsx0He95IKGP3nRpZ+b95jWj8erfot9ZZYM7rrdD2u3BaJ
-# 97TZNL0lUR67K7JLOjaCwsRqomouK+vm+Zx/pXLoX32xuWvqucxwSJUPDgAuKN3u
-# tlR+ORRYBxHXnY8jadLsk9UWFCXKoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCC6rtuIsE2W3dFyvm2HK4skIl4yGwJgjqMI6fQTnXkjSjANBgkqhkiG9w0BAQEF
+# AASCAQDWVSoohwV9bqTdbxsFtdBIhg4WazOhkcVgVayzFCWlNX7CKjkanJAI6JET
+# 4WW8rw0JGjEN2tfNX0AB0sARXd/OGtbMOhvSk1jE6UjjVZlMYLQlq2kzZTPhcpNT
+# EdXRtfzUiopSFUztWq/P+RH71T1jQ7K5EtuvoC+WGDMjYadnNgfxJYlMWF5D6G/+
+# rpaacPUGC2Y7b9jSc9UXpWuWWeB5vQIKskhDAKFKAk6Muf/3QW3zv9zTv+YXNdN/
+# 0MsJq0Hg5bCGQrfx0TN8XFf95F7mpNsluRmuDK28cL58CScraczbYq3ITOoSEB8j
+# c37jnThKasqGguzzNMeqPVIdS/SQoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExNjEx
-# MzIzNVowLwYJKoZIhvcNAQkEMSIEIAGr/pAWp/7eFvz9gwnbRbLjznHtdOJiqRBb
-# eWjSR6fcMA0GCSqGSIb3DQEBAQUABIICAJI/iWW05C9zwMTcCZJ8s3Is0fGl3eIW
-# ZyVKvojTYgMUzZLZRCPhkG3TG7JQuMu7or6bsEWiJ8rFM9+N6J07V27Dl96QPo0i
-# iALN6eBeTbaupqaA96uyVpDQ+Z+H4Y0x+OQs4HDuyrwxk86qkobRI3q3z0DS3VTf
-# yuEqTQ66b6SF3I7qDh5Bv9nEMFF1SeYk/oZ2JPDLssnfBKU4vr+qYF1dayauSlW/
-# TCFWDcJ7JGf2+ijgFH770tYBVXd1sqzt9Dxd4BKXb/dGUN89PjJaUfWIv+mItgnm
-# 9ezpKywjLU7z3WZqB/Zdq8vPna9uDIWzDcc2XiAqdRJ5DnJ3h44ZG8VjgAZzw3+g
-# fRd1v1ETd7XBYsvbLnGMfgRu1wmuALBV4Xq83eTkUQlV1+gw2YQnBe5Y5p0ZZPrF
-# aShlMbLq/OEC10/x+FQ8CUgl/qI8dWkRwb54tvC8AV5DSmx674Y4JikzKZY9Eknw
-# LV1cHIGYmaJlBQQ1GszsHmTWNrwjyr3Gi2oBhKxfPekBwhhoEChNzCqDRwUU4p74
-# mtUejURFZJNL3y91dYlp0UGATSa5zY2YZbqNE+KyChq5viIEVx3IpdpePonHQCBt
-# v3UnD9UNk4dTy0y3/ldjR/sqUsYZnDCvGWXMWVwcejez+xpK0zkmY6vdDVbVx8cj
-# cESw4lBphWaS
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExNjIx
+# MDc0OFowLwYJKoZIhvcNAQkEMSIEIOXwYkSFdR2iGqVeqKLoDPuu7AHqN2nl6tWI
+# 9o3xNYvgMA0GCSqGSIb3DQEBAQUABIICAJM6mFkjrGoL76CJtlaPhVQ14oBj6sh3
+# vDr0c7UR1UuKwIQRw35pDPozYgW9k95SlADf85ZPSkqU9GTeOe3M5l62gmve5O82
+# 4BxZjP3A1iHXXvVFhDo5diwfsxbksA9msVIAys6bdufb5/ieuvfURuvyYv3EFPOv
+# MTuKk6fymcIb9nztzM+1YFXVgU+eQp9SbhdMUVeNHC5PQ8S6qwufThnG98d0ZD5X
+# NZNQRSQ1Nr1FuatW9Ao6Z5A6feb8y+wRxMlRCPdUgxMXdVoYggraoXyczDnkxa1l
+# rAhVOLbOCg8Yyh8aJ5zCvuXpZzwSZAm4bj/UroSoWJSgsiDt+If3Tt2kKTv9xkqp
+# QrDqkN3WVXhYwOei0s2OP3QGNQuE+Vcqo4GfWSL6q5hffeu8+KX6n3ciTOP0JX2i
+# DBj+LHVEYeexde2X3BLCDRqjwweEgVwNiVy5Zuod042S0jWYRKv7pNligoj5w4LK
+# VztzKbuAbeRiWh2wXODI96NhMNBXTAAk3e16ZVDE/rn7+oXqiBBH50JUxY4ur7ee
+# D7SP1q+aVI0BCuymLmKJuGsGvhZSf7tyB6FtdgKOVqqE52c0xf7PkjQiYpftD1Kl
+# tWTwGgG41PPZhSv5VqV+hqdhgeX4PZKBQyecv/LMEhmJbHHQYReLwYiz6KvwyaOL
+# hWcCBr/Z9fT1
 # SIG # End signature block

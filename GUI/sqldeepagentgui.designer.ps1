@@ -211,6 +211,7 @@ $chkCompare.add_CheckedChanged($chkCompare_CheckedChanged)
 #MenuStrip
 #
 $MenuStrip.Items.AddRange([System.Windows.Forms.ToolStripItem[]]@($FileToolStripMenuItem,$ToolsToolStripMenuItem))
+$MenuStrip.LayoutStyle = [System.Windows.Forms.ToolStripLayoutStyle]::HorizontalStackWithOverflow
 $MenuStrip.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]0,[System.Int32]0))
 $MenuStrip.Name = [System.String]'MenuStrip'
 $MenuStrip.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]569,[System.Int32]24))
@@ -227,21 +228,21 @@ $FileToolStripMenuItem.Text = [System.String]'&File'
 #mnuLoadConfig
 #
 $mnuLoadConfig.Name = [System.String]'mnuLoadConfig'
-$mnuLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
+$mnuLoadConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
 $mnuLoadConfig.Text = [System.String]'&Load config ...'
 $mnuLoadConfig.add_Click($mnuLoadConfig_Click)
 #
 #mnuSaveConfig
 #
 $mnuSaveConfig.Name = [System.String]'mnuSaveConfig'
-$mnuSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
+$mnuSaveConfig.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
 $mnuSaveConfig.Text = [System.String]'&Save config ...'
 $mnuSaveConfig.add_Click($mnuSaveConfig_Click)
 #
 #mnuExit
 #
 $mnuExit.Name = [System.String]'mnuExit'
-$mnuExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]152,[System.Int32]22))
+$mnuExit.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]149,[System.Int32]22))
 $mnuExit.Text = [System.String]'E&xit'
 $mnuExit.add_Click($mnuExit_Click)
 #
@@ -272,6 +273,7 @@ $StatusStrip1.Items.AddRange([System.Windows.Forms.ToolStripItem[]]@($lblStatus,
 $StatusStrip1.Location = (New-Object -TypeName System.Drawing.Point -ArgumentList @([System.Int32]0,[System.Int32]314))
 $StatusStrip1.Name = [System.String]'StatusStrip1'
 $StatusStrip1.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]569,[System.Int32]22))
+$StatusStrip1.SizingGrip = $false
 $StatusStrip1.TabIndex = [System.Int32]15
 $StatusStrip1.Text = [System.String]'StatusStrip1'
 #
@@ -284,7 +286,7 @@ $lblStatus.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([Sys
 #
 $lblMessage.ForeColor = [System.Drawing.Color]::Navy
 $lblMessage.Name = [System.String]'lblMessage'
-$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]516,[System.Int32]17))
+$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]485,[System.Int32]17))
 $lblMessage.Spring = $true
 $lblMessage.Text = [System.String]'You can comment connection string(s) by adding -- in front of each line.'
 #
@@ -293,7 +295,7 @@ $lblMessage.Text = [System.String]'You can comment connection string(s) by addin
 $lblVersion.DisplayStyle = [System.Windows.Forms.ToolStripItemDisplayStyle]::Text
 $lblVersion.Name = [System.String]'lblVersion'
 $lblVersion.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]38,[System.Int32]17))
-$lblVersion.Text = [System.String]'V1.0.1'
+$lblVersion.Text = [System.String]'V1.0.3'
 #
 #lblSqlPackage
 #
@@ -337,7 +339,7 @@ $Main.Icon = ([System.Drawing.Icon]$resources.'$this.Icon')
 $Main.MainMenuStrip = $MenuStrip
 $Main.MaximizeBox = $false
 $Main.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
-$Main.Text = [System.String]'SqlDeep Synchronizer'
+$Main.Text = [System.String]'SqlDeep Synchronizer Agent'
 $MenuStrip.ResumeLayout($false)
 $MenuStrip.PerformLayout()
 $StatusStrip1.ResumeLayout($false)

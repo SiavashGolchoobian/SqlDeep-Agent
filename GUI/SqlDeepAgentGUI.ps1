@@ -1,3 +1,5 @@
+$chkDownloadAssets_CheckedChanged = {
+}
 $mnuExit_Click = {
     $Main.Dispose()
 }
@@ -16,8 +18,6 @@ $mnuLoadConfig_Click = {
 $mnuSaveConfig_Click = {
     Save-Config
 }
-$chkDownloadAssets_CheckedChanged = {
-}
 $chkSyncScriptRepository_CheckedChanged = {
     Set-Controls
 }
@@ -35,26 +35,43 @@ $btnBrowse_Click = {
     $txtLocalRepositoryPath.Text=$dlgFolderBrowser.SelectedPath
 }
 function Execute-Commands(){
+    [string[]]$myConnections=$null;
+    [bool]$myAllowToProcess=$false;
     $Main.Cursor=[System.Windows.Forms.Cursors]::WaitCursor
     $lblStatus.Text='Running...'
-    [string[]]$myConnections=$null;
     $myConnections=$txtConnectionString.Text.Replace("`r","").Split("`n", [StringSplitOptions]::RemoveEmptyEntries) | Where-Object {$_ -notlike "--*"}
     
-    if ($chkDownloadAssets.Checked){
-        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text)
-        Sync-SqlDeep -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text)
+    #--Check prequisites
+    if ($null -eq $txtSqlDeepRepositoryItemFileName.Text) {$txtSqlDeepRepositoryItemFileName.Text='SqlDeepCatalog.json.result'}
+    if ($null -eq ($txtLocalRepositoryPath.Text)){
+        If ($PSScriptRoot[-1] -eq '\'){
+            $txtLocalRepositoryPath.Text=$PSScriptRoot+'SqlDeep'
+        }else{
+            $txtLocalRepositoryPath.Text=$PSScriptRoot+'\SqlDeep'
+        }
     }
-    if ($chkCompare.Checked){
-        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
-        $myConnections | ForEach-Object{Sync-SqlDeep -CompareDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) -SqlPackageFilePath ($txtSqlPackage.Text)}
+    if ((Test-Path -Path ($txtLocalRepositoryPath.Text) -PathType Container) -eq $false){
+        New-Item -Path ($txtLocalRepositoryPath.Text) -ItemType Directory -Force
+        $myAllowToProcess=$true
     }
-    if ($chkSyncDatabaseModule.Checked){
-        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
-        $myConnections | ForEach-Object{Sync-SqlDeep -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) -SqlPackageFilePath ($txtSqlPackage.Text)}
-    }
-    if ($chkSyncScriptRepository.Checked){
-        #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
-        $myConnections | ForEach-Object{Sync-SqlDeep  -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) }
+    #--Process requests
+    if ($myAllowToProcess=$true){
+        if ($chkDownloadAssets.Checked){
+            #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text)
+            Sync-SqlDeep -DownloadAssets -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text)
+        }
+        if ($chkCompare.Checked){
+            #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+            $myConnections | ForEach-Object{Sync-SqlDeep -CompareDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) -SqlPackageFilePath ($txtSqlPackage.Text)}
+        }
+        if ($chkSyncDatabaseModule.Checked){
+            #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+            $myConnections | ForEach-Object{Sync-SqlDeep -SyncDatabaseModule -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) -SqlPackageFilePath ($txtSqlPackage.Text)}
+        }
+        if ($chkSyncScriptRepository.Checked){
+            #. (Join-Path $PSScriptRoot 'SqlDeepAgent.ps1') -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($txtConnectionString.Text)
+            $myConnections | ForEach-Object{Sync-SqlDeep  -SyncScriptRepository -LocalRepositoryPath ($txtLocalRepositoryPath.Text) -SqlDeepRepositoryItemsFileName ($txtSqlDeepRepositoryItemFileName.Text) -ConnectionString ($_) }
+        }
     }
     $Main.Cursor=[System.Windows.Forms.Cursors]::Default
     $lblStatus.Text=''
@@ -101,21 +118,31 @@ function Get-ResourceAsBinary {
     [System.IO.BinaryReader]::new($KV.Value).ReadBytes($KV.Value.Length)
 }
 function Install-Certificate(){
+    $Main.Cursor=[System.Windows.Forms.Cursors]::WaitCursor
+    $lblStatus.Text='Running...'
     [string]$LocalRepositoryPath=$txtLocalRepositoryPath.Text;
     Write-Host ('Exporting SqlDeepPublic.cer to ' + $LocalRepositoryPath)
     $myBinaryContent=Get-ResourceAsBinary -Name 'SqlDeepPublic.cer'
     Set-Content -Path ($LocalRepositoryPath+'\SqlDeepPublic.cer') -Value $myBinaryContent -Encoding Byte -Force
     Import-Certificate -FilePath ($LocalRepositoryPath+'\SqlDeepPublic.cer') -CertStoreLocation 'Cert:\CurrentUser\My'
     Write-Host ($LocalRepositoryPath + '\SqlDeepPublic.cer installed')
+    $Main.Cursor=[System.Windows.Forms.Cursors]::Default
+    $lblStatus.Text=''
 }
 function Install-SqlPackage(){
+    $Main.Cursor=[System.Windows.Forms.Cursors]::WaitCursor
+    $lblStatus.Text='Running...'
     [string]$LocalRepositoryPath=$txtLocalRepositoryPath.Text;
     Write-Host ('Exporting DacFramework_161.msi to ' + $LocalRepositoryPath)
     $myBinaryContent=Get-ResourceAsBinary -Name 'DacFramework_161.msi'
     Set-Content -Path ($LocalRepositoryPath+'\DacFramework_161.msi') -Value $myBinaryContent -Encoding Byte -Force
     Start-Process ($LocalRepositoryPath+'\DacFramework_161.msi');
     Write-Host ($LocalRepositoryPath + '\DacFramework_161.msi installed')
+    $Main.Cursor=[System.Windows.Forms.Cursors]::Default
+    $lblStatus.Text=''
 }
+
+#--Main Body
 Add-Type -AssemblyName System.Windows.Forms
 . (Join-Path $PSScriptRoot 'sqldeepagentgui.designer.ps1')
 . (Join-Path $PSScriptRoot 'SqlDeepAgent.psm1')
