@@ -1193,8 +1193,8 @@ SqlDeep-Comment#>
         param (
             [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Folder path including downloaded items")][string]$LocalRepositoryPath,
             [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="Target database connection string")][ValidateNotNullOrEmpty()][string]$ConnectionString,
-            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file path")]$SqlDeepRepositoryItemsFileName,
-            [Parameter(Mandatory=$true,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlPackage.exe file path")]$SqlPackageFilePath,
+            [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlDeep RepositoryItems file path")]$SqlDeepRepositoryItemsFileName,
+            [Parameter(Mandatory=$false,ValueFromPipeline=$true,ValueFromPipelineByPropertyName=$true,HelpMessage="SqlPackage.exe file path")]$SqlPackageFilePath,
             [Parameter(Mandatory=$false)][Switch]$DownloadAssets,
             [Parameter(Mandatory=$false)][Switch]$CompareDatabaseModule,
             [Parameter(Mandatory=$false)][Switch]$SyncDatabaseModule,
@@ -1335,5 +1335,10 @@ if ($SyncScriptRepository) {
 SqlDeep-Comment#>
 
 
-$txtLocalRepositoryPath.Text=$PSScriptRoot+'\SqlDeep'
+
+If ($PSScriptRoot[-1] -eq '\'){
+    $txtLocalRepositoryPath.Text=$PSScriptRoot+'SqlDeep'
+}else{
+    $txtLocalRepositoryPath.Text=$PSScriptRoot+'\SqlDeep'
+}
 $Main.ShowDialog()
