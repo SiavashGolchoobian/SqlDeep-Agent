@@ -1080,18 +1080,20 @@ SqlDeep-Comment#>
             [bool]$myAnswer=$false;
             [string]$myCommand="
                 SET NOCOUNT ON
-                CREATE TABLE #myCommands ([Id] INT IDENTITY PRIMARY KEY,[Command] nvarchar(max))
+                USE [SqlDeep];
+				CREATE TABLE #myCommands ([Id] INT IDENTITY PRIMARY KEY,[Command] nvarchar(max))
                 
                 ---------Insert Extended Properties
                 INSERT INTO #myCommands ([Command])
                 SELECT 
                     '
                     BEGIN TRY
-                        EXEC sys.sp_addextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                        EXEC [sys].[sp_addextendedproperty] @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
                     END TRY
                     BEGIN CATCH
-                        EXEC sys.sp_updateextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
-                    END CATCH' AS Command
+                        EXEC [sys].[sp_updateextendedproperty] @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                    END CATCH
+					GO' AS Command
                 FROM 
                     [sys].[extended_properties] AS myExtendedProperties
                 WHERE 
@@ -1105,60 +1107,44 @@ SqlDeep-Comment#>
                         '_ShrinkLogToSizeMB',
                         '_TempSnapLocation')
                 
-                ---------Insert Permissions
+                ---------Insert Permissions and Role memberships
                 INSERT INTO #myCommands ([Command])
                 SELECT
-                    N'USE [SqlDeep]; IF NOT EXISTS (SELECT 1 FROM [SqlDeep].[sys].[database_principals] AS myDatabaseLogins WITH (READPAST) WHERE [myDatabaseLogins].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') CREATE USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];' AS Command
+                    N'
+					USE [SqlDeep];
+					IF EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) INNER OUTER JOIN [sys].[server_principals] AS myLogins WITH (READPAST) ON [myLogins].[name] = [myUsers].[name] WHERE [myUsers].[sid] <> [myLogins].[sid] AND [myUsers].[type] IN (''S'',''U'') AND [myUsers].[name]=''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
+						DROP USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
+					GO
+					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') 
+						CREATE USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
+					GO
+					ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];
+					GO' AS Command
+
                 FROM
-                    [SqlDeep].[sys].[database_role_members] AS [myDbRoleMembers]
-                    INNER JOIN [SqlDeep].[sys].[database_principals] AS [myDBRole] ON [myDbRoleMembers].[role_principal_id] = [myDBRole].[principal_id]
-                    INNER JOIN [SqlDeep].[sys].[database_principals] AS [myDBUser] ON [myDbRoleMembers].[member_principal_id] = [myDBUser].[principal_id]
-                    INNER JOIN [master].[sys].[server_principals] AS myLogins ON [myDBUser].[sid]=[myLogins].[sid]
+                    [sys].[database_role_members] AS [myDbRoleMembers]
+                    INNER JOIN [sys].[database_principals] AS [myDBRole] ON [myDbRoleMembers].[role_principal_id] = [myDBRole].[principal_id]
+                    INNER JOIN [sys].[database_principals] AS [myDBUser] ON [myDbRoleMembers].[member_principal_id] = [myDBUser].[principal_id]
+                    INNER JOIN [sys].[server_principals] AS myLogins ON [myDBUser].[sid]=[myLogins].[sid]
                 WHERE
                     [myDBRole].[type] = 'R'
                     AND [myDBUser].[name] NOT IN ('dbo')
                 UNION ALL
                 SELECT 
-                    N'USE [SqlDeep]; IF NOT EXISTS (SELECT 1 FROM [SqlDeep].[sys].[database_principals] AS myDatabaseLogins WITH (READPAST) WHERE [myDatabaseLogins].[name] = ''' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') CREATE USER [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; '+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];' AS Command
+                    N'
+					USE [SqlDeep];
+					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
+						CREATE USER [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; 
+					GO
+					'+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
+					GO' AS Command
                 FROM 
-                    [SqlDeep].[sys].[database_permissions] AS myPermissions
-                    INNER JOIN [SqlDeep].[sys].[database_principals] AS myDbUsers ON myPermissions.grantee_principal_id=myDbUsers.principal_id
-                    INNER JOIN [master].[sys].[server_principals] AS myLogins ON myDbUsers.sid=myLogins.sid
+                    [sys].[database_permissions] AS myPermissions
+                    INNER JOIN [sys].[database_principals] AS myDbUsers ON myPermissions.grantee_principal_id=myDbUsers.principal_id
+                    INNER JOIN [sys].[server_principals] AS myLogins ON myDbUsers.sid=myLogins.sid
                 WHERE
                     [myPermissions].[type] NOT IN ('CO')
-                
-                ---------Insert SID matching
-                DECLARE @myCommand nvarchar(4000)
-				SET @myCommand='
-				;
-					DECLARE @myUser SYSNAME
-					DECLARE @mySid UNIQUEIDENTIFIER
-
-					DECLARE myUserSec CURSOR FAST_FORWARD FOR
-					SELECT 
-						[myUsers].[name],
-						[myUsers].[sid]
-					FROM 
-						[dbo].[sysusers] AS myUsers (READPAST) -- Provide databasename to be run on
-						INNER JOIN [master].[dbo].[syslogins] AS myLogins (READPAST) ON [myUsers].[name] collate SQL_Latin1_General_CP1_CI_AS = [myLogins].[name] collate SQL_Latin1_General_CP1_CI_AS
-					WHERE
-						[myUsers].[name] NOT IN (''public'', ''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''db_owner'', ''db_accessadmin'', ''db_securityadmin'', ''db_ddladmin'', ''db_backupoperator'', ''db_datareader'', ''db_datawriter'', ''db_denydatareader'', ''db_denydatawriter'')
-						AND [myUsers].[Sid] <> [myLogins].[sid]
-					ORDER BY
-						[myUsers].[name]
-
-					OPEN myUserSec
-					FETCH NEXT FROM myUserSec INTO @myUser, @mySid
-					WHILE (@@FETCH_STATUS <> -1)
-						BEGIN
-							EXEC [dbo].[sp_change_users_login] ''Update_One'', @myUser, @myUser -- Provide databasename to be run on
-						FETCH NEXT FROM myUserSec INTO @myUser, @mySid
-						END
-					CLOSE myUserSec
-					DEALLOCATE myUserSec
-				'
-				INSERT INTO #myCommands ([Command]) VALUES (@myCommand)
-
+               
                 ---------Return Commands
                 SELECT [Command] FROM #myCommands
             "

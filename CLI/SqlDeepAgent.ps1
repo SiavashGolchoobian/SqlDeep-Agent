@@ -478,18 +478,20 @@ param (
             [bool]$myAnswer=$false;
             [string]$myCommand="
                 SET NOCOUNT ON
-                CREATE TABLE #myCommands ([Id] INT IDENTITY PRIMARY KEY,[Command] nvarchar(max))
+                USE [SqlDeep];
+				CREATE TABLE #myCommands ([Id] INT IDENTITY PRIMARY KEY,[Command] nvarchar(max))
                 
                 ---------Insert Extended Properties
                 INSERT INTO #myCommands ([Command])
                 SELECT 
                     '
                     BEGIN TRY
-                        EXEC sys.sp_addextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                        EXEC [sys].[sp_addextendedproperty] @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
                     END TRY
                     BEGIN CATCH
-                        EXEC sys.sp_updateextendedproperty @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
-                    END CATCH' AS Command
+                        EXEC [sys].[sp_updateextendedproperty] @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
+                    END CATCH
+					GO' AS Command
                 FROM 
                     [sys].[extended_properties] AS myExtendedProperties
                 WHERE 
@@ -503,60 +505,44 @@ param (
                         '_ShrinkLogToSizeMB',
                         '_TempSnapLocation')
                 
-                ---------Insert Permissions
+                ---------Insert Permissions and Role memberships
                 INSERT INTO #myCommands ([Command])
                 SELECT
-                    N'USE [SqlDeep]; IF NOT EXISTS (SELECT 1 FROM [SqlDeep].[sys].[database_principals] AS myDatabaseLogins WITH (READPAST) WHERE [myDatabaseLogins].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') CREATE USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];' AS Command
+                    N'
+					USE [SqlDeep];
+					IF EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) INNER OUTER JOIN [sys].[server_principals] AS myLogins WITH (READPAST) ON [myLogins].[name] = [myUsers].[name] WHERE [myUsers].[sid] <> [myLogins].[sid] AND [myUsers].[type] IN (''S'',''U'') AND [myUsers].[name]=''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
+						DROP USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
+					GO
+					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') 
+						CREATE USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
+					GO
+					ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];
+					GO' AS Command
+
                 FROM
-                    [SqlDeep].[sys].[database_role_members] AS [myDbRoleMembers]
-                    INNER JOIN [SqlDeep].[sys].[database_principals] AS [myDBRole] ON [myDbRoleMembers].[role_principal_id] = [myDBRole].[principal_id]
-                    INNER JOIN [SqlDeep].[sys].[database_principals] AS [myDBUser] ON [myDbRoleMembers].[member_principal_id] = [myDBUser].[principal_id]
-                    INNER JOIN [master].[sys].[server_principals] AS myLogins ON [myDBUser].[sid]=[myLogins].[sid]
+                    [sys].[database_role_members] AS [myDbRoleMembers]
+                    INNER JOIN [sys].[database_principals] AS [myDBRole] ON [myDbRoleMembers].[role_principal_id] = [myDBRole].[principal_id]
+                    INNER JOIN [sys].[database_principals] AS [myDBUser] ON [myDbRoleMembers].[member_principal_id] = [myDBUser].[principal_id]
+                    INNER JOIN [sys].[server_principals] AS myLogins ON [myDBUser].[sid]=[myLogins].[sid]
                 WHERE
                     [myDBRole].[type] = 'R'
                     AND [myDBUser].[name] NOT IN ('dbo')
                 UNION ALL
                 SELECT 
-                    N'USE [SqlDeep]; IF NOT EXISTS (SELECT 1 FROM [SqlDeep].[sys].[database_principals] AS myDatabaseLogins WITH (READPAST) WHERE [myDatabaseLogins].[name] = ''' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') CREATE USER [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; '+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];' AS Command
+                    N'
+					USE [SqlDeep];
+					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
+						CREATE USER [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; 
+					GO
+					'+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
+					GO' AS Command
                 FROM 
-                    [SqlDeep].[sys].[database_permissions] AS myPermissions
-                    INNER JOIN [SqlDeep].[sys].[database_principals] AS myDbUsers ON myPermissions.grantee_principal_id=myDbUsers.principal_id
-                    INNER JOIN [master].[sys].[server_principals] AS myLogins ON myDbUsers.sid=myLogins.sid
+                    [sys].[database_permissions] AS myPermissions
+                    INNER JOIN [sys].[database_principals] AS myDbUsers ON myPermissions.grantee_principal_id=myDbUsers.principal_id
+                    INNER JOIN [sys].[server_principals] AS myLogins ON myDbUsers.sid=myLogins.sid
                 WHERE
                     [myPermissions].[type] NOT IN ('CO')
-                
-                ---------Insert SID matching
-                DECLARE @myCommand nvarchar(4000)
-				SET @myCommand='
-				;
-					DECLARE @myUser SYSNAME
-					DECLARE @mySid UNIQUEIDENTIFIER
-
-					DECLARE myUserSec CURSOR FAST_FORWARD FOR
-					SELECT 
-						[myUsers].[name],
-						[myUsers].[sid]
-					FROM 
-						[dbo].[sysusers] AS myUsers (READPAST) -- Provide databasename to be run on
-						INNER JOIN [master].[dbo].[syslogins] AS myLogins (READPAST) ON [myUsers].[name] collate SQL_Latin1_General_CP1_CI_AS = [myLogins].[name] collate SQL_Latin1_General_CP1_CI_AS
-					WHERE
-						[myUsers].[name] NOT IN (''public'', ''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''db_owner'', ''db_accessadmin'', ''db_securityadmin'', ''db_ddladmin'', ''db_backupoperator'', ''db_datareader'', ''db_datawriter'', ''db_denydatareader'', ''db_denydatawriter'')
-						AND [myUsers].[Sid] <> [myLogins].[sid]
-					ORDER BY
-						[myUsers].[name]
-
-					OPEN myUserSec
-					FETCH NEXT FROM myUserSec INTO @myUser, @mySid
-					WHILE (@@FETCH_STATUS <> -1)
-						BEGIN
-							EXEC [dbo].[sp_change_users_login] ''Update_One'', @myUser, @myUser -- Provide databasename to be run on
-						FETCH NEXT FROM myUserSec INTO @myUser, @mySid
-						END
-					CLOSE myUserSec
-					DEALLOCATE myUserSec
-				'
-				INSERT INTO #myCommands ([Command]) VALUES (@myCommand)
-
+               
                 ---------Return Commands
                 SELECT [Command] FROM #myCommands
             "
@@ -857,8 +843,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDC3OUDgBla6bnj
-# +1RYw/49U4tdT00RFEOEj58e2J6px6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCBiErZR9VGrZd6P
+# 3ezvAGb6s5Osfrl8lMRJzSXcwSjlCaCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -980,28 +966,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCByF/+HmZ5T7C0NyybnIWVxIqsTx8V4BXQp9+T5AlTvOjANBgkqhkiG9w0BAQEF
-# AASCAQBrGQSotin8sVGSR/ThOKMratTTjOvRwVH4fAxGyJR8G+SMQp/rjnof4Ai8
-# I3CMg1k0YD3tAX34GBiqK/98yCVNER2IQyabf9NMc4pdSyDiHMY6Yf2Yl2jOEYEt
-# WwwoztH8XpVNcjk9wy7nWZ2GWSo9nQMAF/4NCVuBtYqkShi6pICxPW0I5N9KSpsu
-# GDHh0v/7GoQjGi+q24HoFEC5xaEc9H9nN9cz/60z3SSfD/ngZhbAvYCEP3hHvQuN
-# KhL/YiODGG05Kozw5XcfPZaz6X9wurjFY5HkOqu2P8V2Kz6L/16B2kKClCGar6h4
-# X3kQqipFeqgKNEYz3GVEBsMl4riuoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCAu2GDJDMtwARzxeZiEgMDDkbs+2uk40ndv5rTSPf1W+jANBgkqhkiG9w0BAQEF
+# AASCAQAwvMArcFoprQNVT4A8sQyCtDA4n4l4o3CpGmnq+ITK1OVhMSU8CIUTYN1R
+# c8qzcWLMtxVDWQaZwnDb/wfBWlvT1DpuWRy9PHz8JQK7hbDta89q/k6ID0yWJ2R+
+# A4++OCDaCkkD249THIxkgEh+iNzp06/Zi4BYvSScUf0nzrvVfPYVO/jSX07Dtpvr
+# PQ8bFKSDv8GlmYDck03j743zi7Bz1HAhi1D636yKX+VX5teMwu4NINXQTtaWin74
+# K3TLSixLSZl1x4NGQw27RhATd/7klslT9l9Mf/RX1uqsvWsTl3177txx6/sUrhAR
+# a5txG4jmMePEFmiEW7syozsLyMeaoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODE0
-# NTM1NFowLwYJKoZIhvcNAQkEMSIEIG2DDNCrRkuoZ7ovZSCKiZj5gyNuejGC9FgO
-# U7t/PPT3MA0GCSqGSIb3DQEBAQUABIICAHUGLknbdAVbqsoR0EMiiby17EwDBYFQ
-# 6h+pxD1Odr4m00iPzuoj8acMQkilf5dsX6K+wGl/G/S06abCEFm2aE9QbScFAaOP
-# YkimlZZenyQ6vcvN8tVCgxnlGldcSwtNxjCP6apU6MSvGtwCnkf2Q3jx8Hwols1p
-# 9pKz0jBbPH3YzyZmILnnyq5/LgOKeYFEWPNjYntdtxEYjxQgWO5oNWLFXfghhwCb
-# JNKDrgn+p1q/jEqWLxZHN8TGqRsb0vGXnBkqET7kKNHhn5CEpPl15zAHyMVY8jmq
-# kd/NyiVISuonOsGlYDv0rlqc9RHT3C1AAz1DbnfCUoQcbQ7ESZJH0dPKPj0cMct4
-# xu+3iIIAUgfzq8UXIoy0jQendkkftvGaj6cXxt8JSjFkKHjhjvRi9qWREGLdP+X9
-# qP0mfhe+KD1MmUof1niaOOpKHbuzcvLi7ODi9ZPEG5bWs6gcNu3+mWng9o7glWnu
-# qbmCWGjfvSt2ETT0e42xzbQpUEfmNZYJ12OY9y9kivXVkNJlPzLNs45OHueILLbu
-# EH1TqbZBvK+Og+2K8XlKi3+tV468hb7SVKfpEw/EzrR0TbuFPmeZEwTdpEGJhPKu
-# f7K165cXD8YXeK/8azNJzHQibd6F6xd4qrCao2LaEsy5MYUuQO5alLa26snXAknf
-# kEswha8vfZ7Z
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODE4
+# MTA1MFowLwYJKoZIhvcNAQkEMSIEIBa5WXD5bptQkASeN/UjSrO7pVbf9UlF+dOR
+# QNGe6taHMA0GCSqGSIb3DQEBAQUABIICAIoixBXvvTjcZ9sM5vdpLLgWAv7Ob+Ad
+# viU8ZNWi65p9bPdzDWbuyZcMnPUiUkZfpE/TsdgjT1b3EcvOy5snp1ZCfsCtS96g
+# tFW8Sz9ltm5nfKynPOM6Pau5Em3L9yfTL+MepKdo27v6sc+5WQ0jaJ8l95V2eesq
+# Zs7GXste9Y9WTZGKtvJFJMH9vAG0F310sP2w0v7zGA4g8TZLCRKNZnC1pxPnqhi+
+# g4tL+xHk56JSEAu2JCWY7lN646atv5Nh2I0bwv+S7GLLJdv2Da3+W9xji6wFh5jk
+# y6rj4TtbAHjjqLUxe60TGP5/jn0Bij9mvude7YpaK1t4PajczKOVFEPmQk5mhrxh
+# jnprBL/KpP3+sfQnydXlSFtlwy9uHBLMnSWNyheHuXlvrHIGFz6TWqM/2CIcQw3t
+# Uvz0rZkk/yF+Ku5o04Ad7lduVq8+QJGUMtgGgVb9eFF4SlGJXWAo+Udg7eshiA0T
+# g+/GlQmNlvhPNz+fvuTQIM5NtibUgRQRdWZfKKy3NrtQy4dxnOPgKvODEB2qcEMo
+# tBjPEYvLKBxyRK8ZXEk26/8a/spWps1tFLSbWH9CK7x/8NdVAsHdWXEv5UieM72V
+# MeLIAp+hGsNYmlu3tgsNvXML3OWqU1IDJL81FiHv/nO76pumsJXo1Op8T1RMrNnl
+# rqAma9N0s2W9
 # SIG # End signature block
