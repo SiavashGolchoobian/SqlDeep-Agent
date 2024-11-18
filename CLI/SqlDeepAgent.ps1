@@ -354,7 +354,7 @@ param (
             try
             {
                 if (Test-Path -Path $DacpacFilePath) {
-                    $null=SqlPackage /Action:DeployReport /OutputPath:$ReportFilePath /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                    $null=SqlPackage /Action:DeployReport /OutputPath:$ReportFilePath /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
                     $myAnswer=$true
                 }
             }
@@ -381,8 +381,8 @@ param (
             try
             {
                 if (Test-Path -Path $DacpacFilePath) {
-                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Diagnostics /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropConstraintsNotInSource=True /Properties:DropDmlTriggersNotInSource=True /Properties:DropExtendedPropertiesNotInSource=True /Properties:DropIndexesNotInSource=True /Properties:DropObjectsNotInSource=True /Properties:DropPermissionsNotInSource=False /Properties:DropRoleMembersNotInSource=False /Properties:DropStatisticsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreAuthorizer=False /Properties:IgnoreExtendedProperties=False /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=False /Properties:IgnoreRoleMembership=False /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
-                    #$null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DeployDatabaseInSingleUserMode=True /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                    $null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Diagnostics /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DisableAndReenableDdlTriggers=True /Properties:DropConstraintsNotInSource=True /Properties:DropDmlTriggersNotInSource=True /Properties:DropExtendedPropertiesNotInSource=True /Properties:DropIndexesNotInSource=True /Properties:DropObjectsNotInSource=True /Properties:DropPermissionsNotInSource=False /Properties:DropRoleMembersNotInSource=False /Properties:DropStatisticsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreAuthorizer=False /Properties:IgnoreExtendedProperties=False /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=False /Properties:IgnoreRoleMembership=False /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
+                    #$null=SqlPackage /Action:Publish /OverwriteFiles:true /TargetConnectionString:$ConnectionString /SourceFile:$DacpacFilePath /Properties:AllowIncompatiblePlatform=True /Properties:BackupDatabaseBeforeChanges=True /Properties:BlockOnPossibleDataLoss=False /Properties:DisableAndReenableDdlTriggers=True /Properties:DropObjectsNotInSource=True /Properties:GenerateSmartDefaults=True /Properties:IgnoreExtendedProperties=True /Properties:IgnoreFilegroupPlacement=False /Properties:IgnoreFillFactor=False /Properties:IgnoreIndexPadding=False /Properties:IgnoreObjectPlacementOnPartitionScheme=False /Properties:IgnorePermissions=True /Properties:IgnoreRoleMembership=True /Properties:IgnoreSemicolonBetweenStatements=False /Properties:IncludeTransactionalScripts=True /Properties:VerifyDeployment=True;
                     $myAnswer=$true
                 }
                 return $myAnswer
@@ -825,8 +825,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCVYEQ0VJFgn2gp
-# edeXRvBi0bHd1Bg2rT4l4Fb3g/l7xqCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCC7BiWFVNDPnJvE
+# +XloH2S9yW8hvjEV0//u6bXbPZ4Fh6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -948,28 +948,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCAfOCOcQ8hVgq6mEeL3RKdRSQ2QQUfD1k6jE3nrPl474DANBgkqhkiG9w0BAQEF
-# AASCAQC6SeO8alObXpnxiiO/JcbO+WzbJ5VgPOKpFlbN22WvCBgCzwu4ueL7cxp/
-# qzru2BV2LOQI4wMj7xxoxXW9UZwUukCRYc/5nGthz1iuutjJX6s/bd4i4yvAgx0q
-# dDcyAtNapy/SpeRT7H8XsxsUGsX0+qBJc/RvCWj7gwSk+tp9EZZEX1w2XCeBBHvN
-# TbCJ5LNAw8PTFGGDNFlZQbxFxcZm6CbuxabzN1vaqX3rACMdTC65y2E2hKqrJALR
-# /K7OUGIUggaksWFfLAeyFhDJvRslpUmNJeFR2lNWyQYwY/nj/j/0RRqJyCzBeAxo
-# Rs2H3MduH4GkPp5rHL8VITrNIaf3oYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCBvUYACEX/Xy1qj29tFKbPEztGxj7gUBxQnQFX1mduO5jANBgkqhkiG9w0BAQEF
+# AASCAQB3LxudKXnjqu4wVsA7fIvt6f4rFI75tZ9KI/lkWjnRIbXtSYVM16GbXRJr
+# frSThIdftczvbGgWtV3xdlmxj9dIPDGDqpQEAAlD8U8WnmgfHNPTSSxsxU/zAHGY
+# jMItvQ7YdMx4DBQtGfOge66HqIQF6sFrTr3kBP+ajfAhSP/JGt3n2K1YaqUOBw0u
+# 4uLazEvtN1/fpNbyARB1cXRxKlhz9po1wvYOpm7XPZhBC8UUuUtcaI8d2iWy+Z+8
+# Bfjf0TfCj2nO1/02cqp5Ve//ZsWN8jNUK5nCBrH4IuWVtBWZgq6whBwMWs5BY5l5
+# kcMuDVklKcfcFnQfvjl4U3V6/C1moYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODA5
-# NTgzOVowLwYJKoZIhvcNAQkEMSIEILsJc3s0lou767np8HeqHb2ujR/J9YcVKcRQ
-# PzGpDhnxMA0GCSqGSIb3DQEBAQUABIICAAogJudFe1AgivkVw135mR0lkP9WxESE
-# nYJHO1S985q70Aa8UzJMUgw6bx5S4BkE1iT/9iZPS5OeZqhxOlQjmEXDeVOYYUu7
-# VKFQDiXlbAuvEtAZzV9wk1FuSLupbd84QS+drEB9k5g2sedeRZkwUIDIZB6KbKnw
-# DVEEHYrzwjOwqEHAs7gNNhZu8JF84y+mtnIV12IP4tHsdaJMYFmrWyWoS5MZswGN
-# hJaszOflCkIsfsXRa2M0cDpHzzkNN4E6uq6I0xbq96wdoq2L+0Ax40z8grLLzz9F
-# iuPhlLb1TSJRHmL/tSlxWOYy0cwYSPGCBbrD1mZnK3KofR0MOFJ3gtIFt6ybhM01
-# ueJ4X0fz/GpP9cEkVN9rWO96TjAspn6yp9zZ6oo2cBnvjN9ri9tIMoBYL1dkniYk
-# Pjoj3B94U/y8ejwBkyt/o3psq3Vy+837UysBuXmThwwmpgmQDEfrVSxP1LkQW8xh
-# crFAtvNTTOACmuTa2fBGDL0oM0KD78GB2r786VypD49btKkvz/pORi96s/OyLMN0
-# Q7TwZhEjIcvA7CMds8Duh/kaTPmp0vhCULsYR4Ci+uTuKE+Iro7f1M/hJQaa7hBB
-# yV7ykjFzjmYOOwq/QlEX+aoZVhOXgJ99/AZgddhTRrSiCuUHWtLNy8Ntv8Aa3AIs
-# PcUjtfMaakpW
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODEx
+# MTExMVowLwYJKoZIhvcNAQkEMSIEIEtJFE8sJPV0+tq2qSQk16YCy2erAUFH17xq
+# /9O0JwsaMA0GCSqGSIb3DQEBAQUABIICAHeyAK4lXbcx0j5DzN3Xz+3cKL6e5UUd
+# 7aXzribKJMyUmc5rUm+X/exppJxuMBPYWSDrCBSyjY8nDDe9E1dM4U0ORSvDGUjD
+# +/Pv7dXR/vp4FbPqcpusY2kIcLnmoncpWwsIVsce1TRwrKyqNxtr0gMvhz70Gdx/
+# 16D2yOCjnjEGFiQhj771q2hx2b5O4TN4+Dj7Gn/AfY4E3Z1LWhlPswO6Sp/QgDqn
+# HhqZY3KEfzRbRVf+pNfoFF0a0rgVf1zKbmWzgrmjAiveaz61YNuG6Zvuwfw7iEPv
+# NY90WwsLz2JuESj9Jlq5ZuEV5qx4eLuxH8WayAOPZNI/rrI+bm/M9U2gHyRAMXO0
+# XDd5xXXzVH2w9xWLJcfC/d2y9K17Ap1EJSXd7pxl1hk57kz03A3sL2BomifDJ4vn
+# Vo9T7zHv0bnNyjkLs5b1eI6ZOHPzUR8R1BdIABGCO0jdcFUnqoqTcHLn8ZfZofb8
+# pmXXtRYy2YXXOT+dfi4xRwLYAlFBDC2d5qYoA06LAEssefCxZMwk35Rq5F8teefu
+# LM5jMZGkahkZU1w9My3M3EOVyedCbIlAn6m+Q5JqR+nA7RSB/dj4GU7Fnx8DSL3K
+# 56TA84DhWkuNzJTKLl2ZnFRSFDc33q6dWElfLGH2Vee2p4so/VQ1ylnTQf2c6LBc
+# aZAQRn4BGxhh
 # SIG # End signature block
