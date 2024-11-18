@@ -1127,6 +1127,38 @@ SqlDeep-Comment#>
                 WHERE
                     [myPermissions].[type] NOT IN ('CO')
                 
+                ---------Insert SID matching
+                DECLARE @myCommand nvarchar(4000)
+				SET @myCommand='
+				;
+					DECLARE @myUser SYSNAME
+					DECLARE @mySid UNIQUEIDENTIFIER
+
+					DECLARE myUserSec CURSOR FAST_FORWARD FOR
+					SELECT 
+						[myUsers].[name],
+						[myUsers].[sid]
+					FROM 
+						[dbo].[sysusers] AS myUsers (READPAST) -- Provide databasename to be run on
+						INNER JOIN [master].[dbo].[syslogins] AS myLogins (READPAST) ON [myUsers].[name] collate SQL_Latin1_General_CP1_CI_AS = [myLogins].[name] collate SQL_Latin1_General_CP1_CI_AS
+					WHERE
+						[myUsers].[name] NOT IN (''public'', ''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''db_owner'', ''db_accessadmin'', ''db_securityadmin'', ''db_ddladmin'', ''db_backupoperator'', ''db_datareader'', ''db_datawriter'', ''db_denydatareader'', ''db_denydatawriter'')
+						AND [myUsers].[Sid] <> [myLogins].[sid]
+					ORDER BY
+						[myUsers].[name]
+
+					OPEN myUserSec
+					FETCH NEXT FROM myUserSec INTO @myUser, @mySid
+					WHILE (@@FETCH_STATUS <> -1)
+						BEGIN
+							EXEC [dbo].[sp_change_users_login] ''Update_One'', @myUser, @myUser -- Provide databasename to be run on
+						FETCH NEXT FROM myUserSec INTO @myUser, @mySid
+						END
+					CLOSE myUserSec
+					DEALLOCATE myUserSec
+				'
+				INSERT INTO #myCommands ([Command]) VALUES (@myCommand)
+
                 ---------Return Commands
                 SELECT [Command] FROM #myCommands
             "
@@ -1422,7 +1454,6 @@ if ($SyncScriptRepository) {
     }
 }
 SqlDeep-Comment#>
-
 
 
 If ($PSScriptRoot[-1] -eq '\'){

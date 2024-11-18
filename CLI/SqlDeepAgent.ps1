@@ -525,6 +525,38 @@ param (
                 WHERE
                     [myPermissions].[type] NOT IN ('CO')
                 
+                ---------Insert SID matching
+                DECLARE @myCommand nvarchar(4000)
+				SET @myCommand='
+				;
+					DECLARE @myUser SYSNAME
+					DECLARE @mySid UNIQUEIDENTIFIER
+
+					DECLARE myUserSec CURSOR FAST_FORWARD FOR
+					SELECT 
+						[myUsers].[name],
+						[myUsers].[sid]
+					FROM 
+						[dbo].[sysusers] AS myUsers (READPAST) -- Provide databasename to be run on
+						INNER JOIN [master].[dbo].[syslogins] AS myLogins (READPAST) ON [myUsers].[name] collate SQL_Latin1_General_CP1_CI_AS = [myLogins].[name] collate SQL_Latin1_General_CP1_CI_AS
+					WHERE
+						[myUsers].[name] NOT IN (''public'', ''dbo'', ''guest'', ''INFORMATION_SCHEMA'', ''sys'', ''db_owner'', ''db_accessadmin'', ''db_securityadmin'', ''db_ddladmin'', ''db_backupoperator'', ''db_datareader'', ''db_datawriter'', ''db_denydatareader'', ''db_denydatawriter'')
+						AND [myUsers].[Sid] <> [myLogins].[sid]
+					ORDER BY
+						[myUsers].[name]
+
+					OPEN myUserSec
+					FETCH NEXT FROM myUserSec INTO @myUser, @mySid
+					WHILE (@@FETCH_STATUS <> -1)
+						BEGIN
+							EXEC [dbo].[sp_change_users_login] ''Update_One'', @myUser, @myUser -- Provide databasename to be run on
+						FETCH NEXT FROM myUserSec INTO @myUser, @mySid
+						END
+					CLOSE myUserSec
+					DEALLOCATE myUserSec
+				'
+				INSERT INTO #myCommands ([Command]) VALUES (@myCommand)
+
                 ---------Return Commands
                 SELECT [Command] FROM #myCommands
             "
@@ -822,12 +854,11 @@ if ($SyncScriptRepository) {
 #SqlDeep-Comment#>
 
 
-
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCAi6D3JjadvpiEe
-# HxBb/8RYAglDHYj3NGv8gYjbM9BdR6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCDC3OUDgBla6bnj
+# +1RYw/49U4tdT00RFEOEj58e2J6px6CCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -949,28 +980,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCATyl5M9hlwbu0brvP20/yIdItD8tW5Rv79tITt8o2RATANBgkqhkiG9w0BAQEF
-# AASCAQBxEcm/qBEGKDmUkyM34wZV+DVDofgmCqEFEsGE7nFieBtw668a7ttk3Hlo
-# o16FJwY30WjVQAkq78GWJ5HdOeE3qW0u4hEvRy3JdU80qEoKHknxQL7EonMsl7Le
-# tZlOzelL87jPPX3pTFWt1Ubc+bLY8LojlFGMk86i3MQxjrCDu1esj6+sGHjhu6Dj
-# P8+ZavaArM/sE2DSbLCxLg2CCjZzcx68WY1clqQIN650C6l0erlC6oQ7RTOXDZIN
-# xuvQoXMMgkykIbd8PjTM3h5CUc5oGNYmEovADVd0gmYRncz+WfJCvBuMhm4Bxt3m
-# 2aSNJvsB2gwT+DDkXg3X7h1MgZ5aoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCByF/+HmZ5T7C0NyybnIWVxIqsTx8V4BXQp9+T5AlTvOjANBgkqhkiG9w0BAQEF
+# AASCAQBrGQSotin8sVGSR/ThOKMratTTjOvRwVH4fAxGyJR8G+SMQp/rjnof4Ai8
+# I3CMg1k0YD3tAX34GBiqK/98yCVNER2IQyabf9NMc4pdSyDiHMY6Yf2Yl2jOEYEt
+# WwwoztH8XpVNcjk9wy7nWZ2GWSo9nQMAF/4NCVuBtYqkShi6pICxPW0I5N9KSpsu
+# GDHh0v/7GoQjGi+q24HoFEC5xaEc9H9nN9cz/60z3SSfD/ngZhbAvYCEP3hHvQuN
+# KhL/YiODGG05Kozw5XcfPZaz6X9wurjFY5HkOqu2P8V2Kz6L/16B2kKClCGar6h4
+# X3kQqipFeqgKNEYz3GVEBsMl4riuoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODEy
-# NTQyOVowLwYJKoZIhvcNAQkEMSIEIM4AXi8Ne8wIR3jPKT09/FmNKzPKJT847tNB
-# 1thZRj1uMA0GCSqGSIb3DQEBAQUABIICAINnW0/N3JwtghKBOed9DliIBLqDvw4x
-# 24Zs4goSSZP+VboC/dPf9AJUNtYHhlqqEAcrspLXNRKV6BhIUxa+LNNfeS714tFZ
-# qH8jzfzCIGCy+puK190MjHysUbaRktA1BGuCCRWdqnU78/3qL4k+rs6HVaQTF2/y
-# IIjt44+fH8CWbomNyOGwtjEcSaigETzRV1R0Rik8jq/Hg+ingMrnhptyr9KIIFiZ
-# FmEW/kH88OJXoiu/yZRUGqN2DhYb0mRehC3qdn8jj3mxrFvt/dkfGVrSy7hdw91F
-# 3wdyQVSgIwy/dWopfynOROz4M+JPcOQ9CJA/K9JmrISwo4YNGpbV2WzCOBxkLXYg
-# 0CrBirXpJDV581mCpmpK6Dec3BBJvfDs18z1o36I+vuGoK0oyeXqsy0v2/XCT6PG
-# byBuXfuLHneP4nddFoXzT9+qUqfSXEC/uHKnRj9kv1RjBX1tIsFME9TrJp3M9pt7
-# UiwL89lxjPs/9+MqsXf9yVdHwXSTREnIKg8MD1ce+sRpWY8SP50EJgBS+d0rqm2D
-# FBzrOQG6M/mL9TW02diNObgTS6Ju/tNWNSf/ryCRrNk1bdazP4JFoMakqi1UAVH+
-# xtJumm+ek5FdZ6POcnVzYend/HIdKBQZ1j4qFUEKbY9zxBgxrfSDP0VRq6bN88Xc
-# SKbhZALo4OqN
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODE0
+# NTM1NFowLwYJKoZIhvcNAQkEMSIEIG2DDNCrRkuoZ7ovZSCKiZj5gyNuejGC9FgO
+# U7t/PPT3MA0GCSqGSIb3DQEBAQUABIICAHUGLknbdAVbqsoR0EMiiby17EwDBYFQ
+# 6h+pxD1Odr4m00iPzuoj8acMQkilf5dsX6K+wGl/G/S06abCEFm2aE9QbScFAaOP
+# YkimlZZenyQ6vcvN8tVCgxnlGldcSwtNxjCP6apU6MSvGtwCnkf2Q3jx8Hwols1p
+# 9pKz0jBbPH3YzyZmILnnyq5/LgOKeYFEWPNjYntdtxEYjxQgWO5oNWLFXfghhwCb
+# JNKDrgn+p1q/jEqWLxZHN8TGqRsb0vGXnBkqET7kKNHhn5CEpPl15zAHyMVY8jmq
+# kd/NyiVISuonOsGlYDv0rlqc9RHT3C1AAz1DbnfCUoQcbQ7ESZJH0dPKPj0cMct4
+# xu+3iIIAUgfzq8UXIoy0jQendkkftvGaj6cXxt8JSjFkKHjhjvRi9qWREGLdP+X9
+# qP0mfhe+KD1MmUof1niaOOpKHbuzcvLi7ODi9ZPEG5bWs6gcNu3+mWng9o7glWnu
+# qbmCWGjfvSt2ETT0e42xzbQpUEfmNZYJ12OY9y9kivXVkNJlPzLNs45OHueILLbu
+# EH1TqbZBvK+Og+2K8XlKi3+tV468hb7SVKfpEw/EzrR0TbuFPmeZEwTdpEGJhPKu
+# f7K165cXD8YXeK/8azNJzHQibd6F6xd4qrCao2LaEsy5MYUuQO5alLa26snXAknf
+# kEswha8vfZ7Z
 # SIG # End signature block
