@@ -477,6 +477,11 @@ param (
         begin {
             [bool]$myAnswer=$false;
             [string]$myCommand="
+                SET NOCOUNT ON
+                CREATE TABLE #myCommands ([Id] INT IDENTITY PRIMARY KEY,[Command] nvarchar(max))
+                
+                ---------Insert Extended Properties
+                INSERT INTO #myCommands ([Command])
                 SELECT 
                     '
                     BEGIN TRY
@@ -497,6 +502,31 @@ param (
                         '_BackupLocation',
                         '_ShrinkLogToSizeMB',
                         '_TempSnapLocation')
+                
+                ---------Insert Permissions
+                INSERT INTO #myCommands ([Command])
+                SELECT
+                    N'USE [SqlDeep]; IF NOT EXISTS (SELECT 1 FROM [SqlDeep].[sys].[database_principals] AS myDatabaseLogins WITH (READPAST) WHERE [myDatabaseLogins].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') CREATE USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];' AS Command
+                FROM
+                    [SqlDeep].[sys].[database_role_members] AS [myDbRoleMembers]
+                    INNER JOIN [SqlDeep].[sys].[database_principals] AS [myDBRole] ON [myDbRoleMembers].[role_principal_id] = [myDBRole].[principal_id]
+                    INNER JOIN [SqlDeep].[sys].[database_principals] AS [myDBUser] ON [myDbRoleMembers].[member_principal_id] = [myDBUser].[principal_id]
+                    INNER JOIN [master].[sys].[server_principals] AS myLogins ON [myDBUser].[sid]=[myLogins].[sid]
+                WHERE
+                    [myDBRole].[type] = 'R'
+                    AND [myDBUser].[name] NOT IN ('dbo')
+                UNION ALL
+                SELECT 
+                    N'USE [SqlDeep]; IF NOT EXISTS (SELECT 1 FROM [SqlDeep].[sys].[database_principals] AS myDatabaseLogins WITH (READPAST) WHERE [myDatabaseLogins].[name] = ''' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') CREATE USER [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; '+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];' AS Command
+                FROM 
+                    [SqlDeep].[sys].[database_permissions] AS myPermissions
+                    INNER JOIN [SqlDeep].[sys].[database_principals] AS myDbUsers ON myPermissions.grantee_principal_id=myDbUsers.principal_id
+                    INNER JOIN [master].[sys].[server_principals] AS myLogins ON myDbUsers.sid=myLogins.sid
+                WHERE
+                    [myPermissions].[type] NOT IN ('CO')
+                
+                ---------Return Commands
+                SELECT [Command] FROM #myCommands
             "
         }
         process {
@@ -795,8 +825,8 @@ if ($SyncScriptRepository) {
 # SIG # Begin signature block
 # MIIbxQYJKoZIhvcNAQcCoIIbtjCCG7ICAQExDzANBglghkgBZQMEAgEFADB5Bgor
 # BgEEAYI3AgEEoGswaTA0BgorBgEEAYI3AgEeMCYCAwEAAAQQH8w7YFlLCE63JNLG
-# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCA9cCf/XFsdcO7v
-# ZGcNghbOsZG4G2IdD4RzwVhSlLuzeaCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
+# KX7zUQIBAAIBAAIBAAIBAAIBADAxMA0GCWCGSAFlAwQCAQUABCCVYEQ0VJFgn2gp
+# edeXRvBi0bHd1Bg2rT4l4Fb3g/l7xqCCFhswggMUMIIB/KADAgECAhAT2c9S4U98
 # jEh2eqrtOGKiMA0GCSqGSIb3DQEBBQUAMBYxFDASBgNVBAMMC3NxbGRlZXAuY29t
 # MB4XDTI0MTAyMzEyMjAwMloXDTI2MTAyMzEyMzAwMlowFjEUMBIGA1UEAwwLc3Fs
 # ZGVlcC5jb20wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQDivSzgGDqW
@@ -918,28 +948,28 @@ if ($SyncScriptRepository) {
 # cWxkZWVwLmNvbQIQE9nPUuFPfIxIdnqq7ThiojANBglghkgBZQMEAgEFAKCBhDAY
 # BgorBgEEAYI3AgEMMQowCKACgAChAoAAMBkGCSqGSIb3DQEJAzEMBgorBgEEAYI3
 # AgEEMBwGCisGAQQBgjcCAQsxDjAMBgorBgEEAYI3AgEVMC8GCSqGSIb3DQEJBDEi
-# BCC6rtuIsE2W3dFyvm2HK4skIl4yGwJgjqMI6fQTnXkjSjANBgkqhkiG9w0BAQEF
-# AASCAQDWVSoohwV9bqTdbxsFtdBIhg4WazOhkcVgVayzFCWlNX7CKjkanJAI6JET
-# 4WW8rw0JGjEN2tfNX0AB0sARXd/OGtbMOhvSk1jE6UjjVZlMYLQlq2kzZTPhcpNT
-# EdXRtfzUiopSFUztWq/P+RH71T1jQ7K5EtuvoC+WGDMjYadnNgfxJYlMWF5D6G/+
-# rpaacPUGC2Y7b9jSc9UXpWuWWeB5vQIKskhDAKFKAk6Muf/3QW3zv9zTv+YXNdN/
-# 0MsJq0Hg5bCGQrfx0TN8XFf95F7mpNsluRmuDK28cL58CScraczbYq3ITOoSEB8j
-# c37jnThKasqGguzzNMeqPVIdS/SQoYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
+# BCAfOCOcQ8hVgq6mEeL3RKdRSQ2QQUfD1k6jE3nrPl474DANBgkqhkiG9w0BAQEF
+# AASCAQC6SeO8alObXpnxiiO/JcbO+WzbJ5VgPOKpFlbN22WvCBgCzwu4ueL7cxp/
+# qzru2BV2LOQI4wMj7xxoxXW9UZwUukCRYc/5nGthz1iuutjJX6s/bd4i4yvAgx0q
+# dDcyAtNapy/SpeRT7H8XsxsUGsX0+qBJc/RvCWj7gwSk+tp9EZZEX1w2XCeBBHvN
+# TbCJ5LNAw8PTFGGDNFlZQbxFxcZm6CbuxabzN1vaqX3rACMdTC65y2E2hKqrJALR
+# /K7OUGIUggaksWFfLAeyFhDJvRslpUmNJeFR2lNWyQYwY/nj/j/0RRqJyCzBeAxo
+# Rs2H3MduH4GkPp5rHL8VITrNIaf3oYIDIDCCAxwGCSqGSIb3DQEJBjGCAw0wggMJ
 # AgEBMHcwYzELMAkGA1UEBhMCVVMxFzAVBgNVBAoTDkRpZ2lDZXJ0LCBJbmMuMTsw
 # OQYDVQQDEzJEaWdpQ2VydCBUcnVzdGVkIEc0IFJTQTQwOTYgU0hBMjU2IFRpbWVT
 # dGFtcGluZyBDQQIQC65mvFq6f5WHxvnpBOMzBDANBglghkgBZQMEAgEFAKBpMBgG
-# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExNjIx
-# MDc0OFowLwYJKoZIhvcNAQkEMSIEIOXwYkSFdR2iGqVeqKLoDPuu7AHqN2nl6tWI
-# 9o3xNYvgMA0GCSqGSIb3DQEBAQUABIICAJM6mFkjrGoL76CJtlaPhVQ14oBj6sh3
-# vDr0c7UR1UuKwIQRw35pDPozYgW9k95SlADf85ZPSkqU9GTeOe3M5l62gmve5O82
-# 4BxZjP3A1iHXXvVFhDo5diwfsxbksA9msVIAys6bdufb5/ieuvfURuvyYv3EFPOv
-# MTuKk6fymcIb9nztzM+1YFXVgU+eQp9SbhdMUVeNHC5PQ8S6qwufThnG98d0ZD5X
-# NZNQRSQ1Nr1FuatW9Ao6Z5A6feb8y+wRxMlRCPdUgxMXdVoYggraoXyczDnkxa1l
-# rAhVOLbOCg8Yyh8aJ5zCvuXpZzwSZAm4bj/UroSoWJSgsiDt+If3Tt2kKTv9xkqp
-# QrDqkN3WVXhYwOei0s2OP3QGNQuE+Vcqo4GfWSL6q5hffeu8+KX6n3ciTOP0JX2i
-# DBj+LHVEYeexde2X3BLCDRqjwweEgVwNiVy5Zuod042S0jWYRKv7pNligoj5w4LK
-# VztzKbuAbeRiWh2wXODI96NhMNBXTAAk3e16ZVDE/rn7+oXqiBBH50JUxY4ur7ee
-# D7SP1q+aVI0BCuymLmKJuGsGvhZSf7tyB6FtdgKOVqqE52c0xf7PkjQiYpftD1Kl
-# tWTwGgG41PPZhSv5VqV+hqdhgeX4PZKBQyecv/LMEhmJbHHQYReLwYiz6KvwyaOL
-# hWcCBr/Z9fT1
+# CSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJKoZIhvcNAQkFMQ8XDTI0MTExODA5
+# NTgzOVowLwYJKoZIhvcNAQkEMSIEILsJc3s0lou767np8HeqHb2ujR/J9YcVKcRQ
+# PzGpDhnxMA0GCSqGSIb3DQEBAQUABIICAAogJudFe1AgivkVw135mR0lkP9WxESE
+# nYJHO1S985q70Aa8UzJMUgw6bx5S4BkE1iT/9iZPS5OeZqhxOlQjmEXDeVOYYUu7
+# VKFQDiXlbAuvEtAZzV9wk1FuSLupbd84QS+drEB9k5g2sedeRZkwUIDIZB6KbKnw
+# DVEEHYrzwjOwqEHAs7gNNhZu8JF84y+mtnIV12IP4tHsdaJMYFmrWyWoS5MZswGN
+# hJaszOflCkIsfsXRa2M0cDpHzzkNN4E6uq6I0xbq96wdoq2L+0Ax40z8grLLzz9F
+# iuPhlLb1TSJRHmL/tSlxWOYy0cwYSPGCBbrD1mZnK3KofR0MOFJ3gtIFt6ybhM01
+# ueJ4X0fz/GpP9cEkVN9rWO96TjAspn6yp9zZ6oo2cBnvjN9ri9tIMoBYL1dkniYk
+# Pjoj3B94U/y8ejwBkyt/o3psq3Vy+837UysBuXmThwwmpgmQDEfrVSxP1LkQW8xh
+# crFAtvNTTOACmuTa2fBGDL0oM0KD78GB2r786VypD49btKkvz/pORi96s/OyLMN0
+# Q7TwZhEjIcvA7CMds8Duh/kaTPmp0vhCULsYR4Ci+uTuKE+Iro7f1M/hJQaa7hBB
+# yV7ykjFzjmYOOwq/QlEX+aoZVhOXgJ99/AZgddhTRrSiCuUHWtLNy8Ntv8Aa3AIs
+# PcUjtfMaakpW
 # SIG # End signature block

@@ -286,7 +286,7 @@ $lblStatus.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([Sys
 #
 $lblMessage.ForeColor = [System.Drawing.Color]::Navy
 $lblMessage.Name = [System.String]'lblMessage'
-$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]485,[System.Int32]17))
+$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]516,[System.Int32]17))
 $lblMessage.Spring = $true
 $lblMessage.Text = [System.String]'You can comment connection string(s) by adding -- in front of each line.'
 #
