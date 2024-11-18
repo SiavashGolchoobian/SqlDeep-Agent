@@ -23,6 +23,7 @@ $Main = New-Object -TypeName System.Windows.Forms.Form
 [System.Windows.Forms.ToolStripMenuItem]$ToolsToolStripMenuItem = $null
 [System.Windows.Forms.ToolStripMenuItem]$mnuCertificate = $null
 [System.Windows.Forms.ToolStripMenuItem]$mnuSqlPackage = $null
+[System.Windows.Forms.ToolStripMenuItem]$mnuClearConsole = $null
 [System.Windows.Forms.StatusStrip]$StatusStrip1 = $null
 [System.Windows.Forms.ToolStripStatusLabel]$lblStatus = $null
 [System.Windows.Forms.ToolStripStatusLabel]$lblMessage = $null
@@ -62,6 +63,7 @@ $lblMessage = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblVersion = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblSqlPackage = (New-Object -TypeName System.Windows.Forms.Label)
 $txtSqlPackage = (New-Object -TypeName System.Windows.Forms.TextBox)
+$mnuClearConsole = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $MenuStrip.SuspendLayout()
 $StatusStrip1.SuspendLayout()
 $Main.SuspendLayout()
@@ -248,7 +250,7 @@ $mnuExit.add_Click($mnuExit_Click)
 #
 #ToolsToolStripMenuItem
 #
-$ToolsToolStripMenuItem.DropDownItems.AddRange([System.Windows.Forms.ToolStripItem[]]@($mnuCertificate,$mnuSqlPackage))
+$ToolsToolStripMenuItem.DropDownItems.AddRange([System.Windows.Forms.ToolStripItem[]]@($mnuCertificate,$mnuSqlPackage,$mnuClearConsole))
 $ToolsToolStripMenuItem.Name = [System.String]'ToolsToolStripMenuItem'
 $ToolsToolStripMenuItem.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]46,[System.Int32]20))
 $ToolsToolStripMenuItem.Text = [System.String]'&Tools'
@@ -295,7 +297,7 @@ $lblMessage.Text = [System.String]'You can comment connection string(s) by addin
 $lblVersion.DisplayStyle = [System.Windows.Forms.ToolStripItemDisplayStyle]::Text
 $lblVersion.Name = [System.String]'lblVersion'
 $lblVersion.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]38,[System.Int32]17))
-$lblVersion.Text = [System.String]'V1.0.3'
+$lblVersion.Text = [System.String]'V1.0.4'
 #
 #lblSqlPackage
 #
@@ -311,6 +313,13 @@ $txtSqlPackage.Location = (New-Object -TypeName System.Drawing.Point -ArgumentLi
 $txtSqlPackage.Name = [System.String]'txtSqlPackage'
 $txtSqlPackage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]381,[System.Int32]21))
 $txtSqlPackage.TabIndex = [System.Int32]4
+#
+#mnuClearConsole
+#
+$mnuClearConsole.Name = [System.String]'mnuClearConsole'
+$mnuClearConsole.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]168,[System.Int32]22))
+$mnuClearConsole.Text = [System.String]'Clear console'
+$mnuClearConsole.add_Click($mnuClearConsole_Click)
 #
 #Main
 #
@@ -370,6 +379,7 @@ Add-Member -InputObject $Main -Name mnuExit -Value $mnuExit -MemberType NoteProp
 Add-Member -InputObject $Main -Name ToolsToolStripMenuItem -Value $ToolsToolStripMenuItem -MemberType NoteProperty
 Add-Member -InputObject $Main -Name mnuCertificate -Value $mnuCertificate -MemberType NoteProperty
 Add-Member -InputObject $Main -Name mnuSqlPackage -Value $mnuSqlPackage -MemberType NoteProperty
+Add-Member -InputObject $Main -Name mnuClearConsole -Value $mnuClearConsole -MemberType NoteProperty
 Add-Member -InputObject $Main -Name StatusStrip1 -Value $StatusStrip1 -MemberType NoteProperty
 Add-Member -InputObject $Main -Name lblStatus -Value $lblStatus -MemberType NoteProperty
 Add-Member -InputObject $Main -Name lblMessage -Value $lblMessage -MemberType NoteProperty

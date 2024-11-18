@@ -1,3 +1,6 @@
+$mnuClearConsole_Click = {
+    Clear
+}
 $chkDownloadAssets_CheckedChanged = {
 }
 $mnuExit_Click = {
