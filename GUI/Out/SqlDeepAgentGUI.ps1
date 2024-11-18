@@ -1092,8 +1092,7 @@ SqlDeep-Comment#>
                     END TRY
                     BEGIN CATCH
                         EXEC [sys].[sp_updateextendedproperty] @name=N'''+[myExtendedProperties].[name]+''', @value=N'''+REPLACE(CAST([myExtendedProperties].[Value]AS NVARCHAR(4000)),'''','''''')+'''
-                    END CATCH
-					GO' AS Command
+                    END CATCH' AS Command
                 FROM 
                     [sys].[extended_properties] AS myExtendedProperties
                 WHERE 
@@ -1112,14 +1111,11 @@ SqlDeep-Comment#>
                 SELECT
                     N'
 					USE [SqlDeep];
-					IF EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) INNER JOIN [sys].[server_principals] AS myLogins WITH (READPAST) ON [myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI = [myUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI WHERE [myUsers].[sid] <> [myLogins].[sid] AND [myUsers].[type] IN (''S'',''U'') AND [myUsers].[name]=''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
+					IF EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) INNER OUTER JOIN [sys].[server_principals] AS myLogins WITH (READPAST) ON [myLogins].[name] = [myUsers].[name] WHERE [myUsers].[sid] <> [myLogins].[sid] AND [myUsers].[type] IN (''S'',''U'') AND [myUsers].[name]=''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
 						DROP USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
-					GO
 					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') 
 						CREATE USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
-					GO
-					ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];
-					GO' AS Command
+					ALTER ROLE [' + CAST([myDBRole].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ADD MEMBER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + '];' AS Command
 
                 FROM
                     [sys].[database_role_members] AS [myDbRoleMembers]
@@ -1135,9 +1131,7 @@ SqlDeep-Comment#>
 					USE [SqlDeep];
 					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
 						CREATE USER [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] FOR LOGIN [' + CAST([myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N']; 
-					GO
-					'+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
-					GO' AS Command
+					'+ CAST([myPermissions].[state_desc] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX))+ N' ' + CAST([myPermissions].[permission_name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + CASE WHEN [myPermissions].[major_id] <> 0 THEN N' ON [' + CAST(OBJECT_SCHEMA_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'].[' + CAST(OBJECT_NAME([myPermissions].[major_id]) COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'] ' ELSE N'' END + N' TO [' + CAST([myDbUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];' AS Command
                 FROM 
                     [sys].[database_permissions] AS myPermissions
                     INNER JOIN [sys].[database_principals] AS myDbUsers ON myPermissions.grantee_principal_id=myDbUsers.principal_id
