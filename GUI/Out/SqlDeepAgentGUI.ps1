@@ -1112,7 +1112,7 @@ SqlDeep-Comment#>
                 SELECT
                     N'
 					USE [SqlDeep];
-					IF EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) INNER OUTER JOIN [sys].[server_principals] AS myLogins WITH (READPAST) ON [myLogins].[name] = [myUsers].[name] WHERE [myUsers].[sid] <> [myLogins].[sid] AND [myUsers].[type] IN (''S'',''U'') AND [myUsers].[name]=''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
+					IF EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) INNER JOIN [sys].[server_principals] AS myLogins WITH (READPAST) ON [myLogins].[name] COLLATE SQL_Latin1_General_CP1_CI_AI = [myUsers].[name] COLLATE SQL_Latin1_General_CP1_CI_AI WHERE [myUsers].[sid] <> [myLogins].[sid] AND [myUsers].[type] IN (''S'',''U'') AND [myUsers].[name]=''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''')
 						DROP USER [' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) + N'];
 					GO
 					IF NOT EXISTS (SELECT 1 FROM [sys].[database_principals] AS myUsers WITH (READPAST) WHERE [myUsers].[name] = ''' + CAST([myDBUser].[name] COLLATE SQL_Latin1_General_CP1_CI_AI AS NVARCHAR(MAX)) +N''') 
