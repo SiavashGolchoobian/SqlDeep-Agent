@@ -151,8 +151,8 @@ Add-Type -AssemblyName System.Windows.Forms
 . (Join-Path $PSScriptRoot 'sqldeepagentgui.designer.ps1')
 . (Join-Path $PSScriptRoot 'SqlDeepAgent.psm1')
 If ($PSScriptRoot[-1] -eq '\'){
-    $txtLocalRepositoryPath.Text=$PSScriptRoot+'SqlDeep'
+    $txtLocalRepositoryPath.Text=$PSScriptRoot+'SqlDeepAgent'
 }else{
-    $txtLocalRepositoryPath.Text=$PSScriptRoot+'\SqlDeep'
+    $txtLocalRepositoryPath.Text=$PSScriptRoot+'\SqlDeepAgent'
 }
 $Main.ShowDialog()
