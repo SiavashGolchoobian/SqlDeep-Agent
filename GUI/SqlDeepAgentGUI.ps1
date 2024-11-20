@@ -127,7 +127,8 @@ function Install-Certificate(){
     Write-Host ('Exporting SqlDeepPublic.cer to ' + $LocalRepositoryPath)
     $myBinaryContent=Get-ResourceAsBinary -Name 'SqlDeepPublic.cer'
     Set-Content -Path ($LocalRepositoryPath+'\SqlDeepPublic.cer') -Value $myBinaryContent -Encoding Byte -Force
-    Import-Certificate -FilePath ($LocalRepositoryPath+'\SqlDeepPublic.cer') -CertStoreLocation 'Cert:\CurrentUser\My'
+    Import-Certificate -FilePath ($LocalRepositoryPath+'\SqlDeepPublic.cer') -CertStoreLocation 'Cert:\LocalMachine\My'
+    Import-Certificate -FilePath ($LocalRepositoryPath+'\SqlDeepPublic.cer') -CertStoreLocation 'Cert:\LocalMachine\Root'
     Write-Host ($LocalRepositoryPath + '\SqlDeepPublic.cer installed')
     $Main.Cursor=[System.Windows.Forms.Cursors]::Default
     $lblStatus.Text=''

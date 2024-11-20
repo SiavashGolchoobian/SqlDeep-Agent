@@ -57,13 +57,13 @@ $mnuExit = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $ToolsToolStripMenuItem = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuCertificate = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $mnuSqlPackage = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
+$mnuClearConsole = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $StatusStrip1 = (New-Object -TypeName System.Windows.Forms.StatusStrip)
 $lblStatus = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblMessage = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblVersion = (New-Object -TypeName System.Windows.Forms.ToolStripStatusLabel)
 $lblSqlPackage = (New-Object -TypeName System.Windows.Forms.Label)
 $txtSqlPackage = (New-Object -TypeName System.Windows.Forms.TextBox)
-$mnuClearConsole = (New-Object -TypeName System.Windows.Forms.ToolStripMenuItem)
 $MenuStrip.SuspendLayout()
 $StatusStrip1.SuspendLayout()
 $Main.SuspendLayout()
@@ -82,7 +82,7 @@ $txtLocalRepositoryPath.Location = (New-Object -TypeName System.Drawing.Point -A
 $txtLocalRepositoryPath.Name = [System.String]'txtLocalRepositoryPath'
 $txtLocalRepositoryPath.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]347,[System.Int32]21))
 $txtLocalRepositoryPath.TabIndex = [System.Int32]1
-$txtLocalRepositoryPath.Text = [System.String]'C:\SqlDeep'
+$txtLocalRepositoryPath.Text = [System.String]'C:\SqlDeepAgent'
 #
 #lblConnectionString
 #
@@ -190,14 +190,14 @@ $btnExit.add_Click($btnExit_Click)
 #dlgSaveFile
 #
 $dlgSaveFile.DefaultExt = [System.String]'cfg'
-$dlgSaveFile.FileName = [System.String]'SqlDeep.cfg'
+$dlgSaveFile.FileName = [System.String]'SqlDeepAgent.cfg'
 $dlgSaveFile.Filter = [System.String]'Config files|*.cfg'
 $dlgSaveFile.SupportMultiDottedExtensions = $true
 #
 #dlgFileBrowser
 #
 $dlgFileBrowser.DefaultExt = [System.String]'cfg'
-$dlgFileBrowser.FileName = [System.String]'SqlDeep.cfg'
+$dlgFileBrowser.FileName = [System.String]'SqlDeepAgent.cfg'
 $dlgFileBrowser.Filter = [System.String]'Config files|*.cfg'
 #
 #chkCompare
@@ -269,6 +269,13 @@ $mnuSqlPackage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @(
 $mnuSqlPackage.Text = [System.String]'Install SqlPackage'
 $mnuSqlPackage.add_Click($mnuSqlPackage_Click)
 #
+#mnuClearConsole
+#
+$mnuClearConsole.Name = [System.String]'mnuClearConsole'
+$mnuClearConsole.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]168,[System.Int32]22))
+$mnuClearConsole.Text = [System.String]'Clear console'
+$mnuClearConsole.add_Click($mnuClearConsole_Click)
+#
 #StatusStrip1
 #
 $StatusStrip1.Items.AddRange([System.Windows.Forms.ToolStripItem[]]@($lblStatus,$lblMessage,$lblVersion))
@@ -297,7 +304,7 @@ $lblMessage.Text = [System.String]'You can comment connection string(s) by addin
 $lblVersion.DisplayStyle = [System.Windows.Forms.ToolStripItemDisplayStyle]::Text
 $lblVersion.Name = [System.String]'lblVersion'
 $lblVersion.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]38,[System.Int32]17))
-$lblVersion.Text = [System.String]'V1.0.4'
+$lblVersion.Text = [System.String]'V1.0.5'
 #
 #lblSqlPackage
 #
@@ -313,13 +320,6 @@ $txtSqlPackage.Location = (New-Object -TypeName System.Drawing.Point -ArgumentLi
 $txtSqlPackage.Name = [System.String]'txtSqlPackage'
 $txtSqlPackage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]381,[System.Int32]21))
 $txtSqlPackage.TabIndex = [System.Int32]4
-#
-#mnuClearConsole
-#
-$mnuClearConsole.Name = [System.String]'mnuClearConsole'
-$mnuClearConsole.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]168,[System.Int32]22))
-$mnuClearConsole.Text = [System.String]'Clear console'
-$mnuClearConsole.add_Click($mnuClearConsole_Click)
 #
 #Main
 #
