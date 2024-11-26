@@ -16,7 +16,7 @@ function Remove-AuthenticodeSignature {
     $newContent | Set-Content $Path
 }
 $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Where-Object -Property Subject -eq 'CN=sqldeep.com'); 
-$myFolderPhrase='SqlDeep-Synchronizer'
+$myFolderPhrase='SqlDeep-Agent'
 $myBasePath=(Get-Location).Path
 $myBasePath=$myBasePath.Substring(0,$myBasePath.LastIndexOf($myFolderPhrase)+$myFolderPhrase.Length)
 if (Test-Path $myBasePath\GUI\Out -PathType Container) {Remove-Item $myBasePath\GUI\Out\ -Recurse -Force;Write-Host 'out folder was removed'}
