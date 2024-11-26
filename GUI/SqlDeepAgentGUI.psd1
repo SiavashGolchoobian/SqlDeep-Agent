@@ -1,6 +1,6 @@
 @{
-    Root = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\GUI\Out\SqlDeepAgentGUI.ps1'
-    OutputPath = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\GUI\Out'
+    Root = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Agent\GUI\Out\SqlDeepAgentGUI.ps1'
+    OutputPath = 'C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Agent\GUI\Out'
     #OutputPath = 'D:\Out'
     Package = @{
         Enabled = $true
@@ -21,9 +21,9 @@
         #DotNetVersion = 'net5.0'       bad
         #PowerShellVersion = '7.1.4'    bad
         FileVersion = '1.0.1'
-        FileDescription = 'SqlDeep Synchronizer Agent'
-        ProductName = 'SqlDeep Synchronizer'
-        ProductVersion = '1.0.1'
+        FileDescription = 'SqlDeep Agent'
+        ProductName = 'SqlDeep Agent'
+        ProductVersion = '1.0.6'
         Copyright = 'SqlDeep'
         RequireElevation = $false
         ApplicationIconPath = 'C:\Users\Siavash\Dropbox\SQL Deep\Logo\SqlDeepV4.ico'

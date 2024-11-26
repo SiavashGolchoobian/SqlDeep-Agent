@@ -295,7 +295,7 @@ $lblStatus.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([Sys
 #
 $lblMessage.ForeColor = [System.Drawing.Color]::Navy
 $lblMessage.Name = [System.String]'lblMessage'
-$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]516,[System.Int32]17))
+$lblMessage.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]485,[System.Int32]17))
 $lblMessage.Spring = $true
 $lblMessage.Text = [System.String]'You can comment connection string(s) by adding -- in front of each line.'
 #
@@ -304,7 +304,7 @@ $lblMessage.Text = [System.String]'You can comment connection string(s) by addin
 $lblVersion.DisplayStyle = [System.Windows.Forms.ToolStripItemDisplayStyle]::Text
 $lblVersion.Name = [System.String]'lblVersion'
 $lblVersion.Size = (New-Object -TypeName System.Drawing.Size -ArgumentList @([System.Int32]38,[System.Int32]17))
-$lblVersion.Text = [System.String]'V1.0.5'
+$lblVersion.Text = [System.String]'V1.0.6'
 #
 #lblSqlPackage
 #
@@ -348,7 +348,7 @@ $Main.Icon = ([System.Drawing.Icon]$resources.'$this.Icon')
 $Main.MainMenuStrip = $MenuStrip
 $Main.MaximizeBox = $false
 $Main.StartPosition = [System.Windows.Forms.FormStartPosition]::CenterScreen
-$Main.Text = [System.String]'SqlDeep Synchronizer Agent'
+$Main.Text = [System.String]'SqlDeep Agent'
 $MenuStrip.ResumeLayout($false)
 $MenuStrip.PerformLayout()
 $StatusStrip1.ResumeLayout($false)

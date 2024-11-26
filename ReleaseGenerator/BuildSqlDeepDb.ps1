@@ -10,8 +10,8 @@ $myCertificate = (Get-ChildItem -Path Cert:\CurrentUser\My -CodeSigningCert | Wh
 [string]$SqlDeepDbDockerContainerPath2022= '/var/opt/mssql/2022/backup/sqldeep'
 [string]$SqlDeepProjectReleasePath='D:\Siavash\TFS\sqldeep\Assets\Release\Latest'
 [string]$SqlDeepPowershellToolsProjectPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-PowershellTools\'
-[string]$SqlDeepSynchronizerProjectPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\Assets\'
-[string]$SqlDeepAssetBashScriptPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Synchronizer\Assets\Bash\'
+[string]$SqlDeepSynchronizerProjectPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Agent\Assets\'
+[string]$SqlDeepAssetBashScriptPath='C:\Users\Siavash\Dropbox\SQL Deep\Tools\SqlDeep Projects\SqlDeep-Agent\Assets\Bash\'
 
 #-----Sign file(s)
 Write-Host 'Sign file(s)'
