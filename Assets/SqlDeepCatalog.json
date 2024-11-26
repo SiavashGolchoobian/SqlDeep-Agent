@@ -7,13 +7,8 @@
       "SqlDeepSynchronizerTools": [
         {
           "name": "SqlDeepAgent.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/CLI/SqlDeepAgent.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Agent/raw/refs/heads/main/CLI/SqlDeepAgent.ps1",
           "description": "The SqlDeep Synchronizer Agent powershell module."
-        },
-        {
-          "name": "SqlDeepAgentGUI.exe",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/GUI/SqlDeepAgentGUI.exe",
-          "description": "The SqlDeep Synchronizer Agent GUI."
         }
       ],
       "SqlDeepDatabase": [
@@ -26,7 +21,7 @@
       "SqlDeepPowershellTools": [
         {
           "name": "HelloWorld.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Assets/Powershell/HelloWorld.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Agent/raw/refs/heads/main/Assets/Powershell/HelloWorld.ps1",
           "description": "A Sample simple script for test purpose."
         },
         {
@@ -71,7 +66,7 @@
         },
         {
           "name": "SqlDeepOsUserAudit.ps1",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Assets/Powershell/SqlDeepOsUserAudit.ps1",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Agent/raw/refs/heads/main/Assets/Powershell/SqlDeepOsUserAudit.ps1",
           "description": "A Sample of Auditing OS logins."
         },
         {
@@ -88,7 +83,7 @@
       "SqlDeepTsqlScript": [
         {
           "name": "SqlDeepTemplate_ScriptRepositoryJob.sql",
-          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Synchronizer/raw/refs/heads/main/Assets/TSQL/SqlDeepTemplate_ScriptRepositoryJob.sql",
+          "uri": "https://github.com/SiavashGolchoobian/SqlDeep-Agent/raw/refs/heads/main/Assets/TSQL/SqlDeepTemplate_ScriptRepositoryJob.sql",
           "description": "A Sample powershell job template to running powershell scripts via jobs on sql server without any PSSQL limitations, Replace VAR_JOBNAME and VAR_REPOSITORYITEMNAME phrases with yours."
         }
       ]
