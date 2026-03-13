@@ -5,12 +5,17 @@ rm /home/siavash/sqldeep/SqlDeep2022.bak
 sudo chown -R siavash /var/opt/mssql/2017/backup/sqldeep/SqlDeep2017.bak
 sudo chown -R siavash /var/opt/mssql/2019/backup/sqldeep/SqlDeep2019.bak
 sudo chown -R siavash /var/opt/mssql/2022/backup/sqldeep/SqlDeep2022.bak
+echo "Starting background command..."
 cp /var/opt/mssql/2017/backup/sqldeep/SqlDeep2017.bak /home/siavash/sqldeep/
 cp /var/opt/mssql/2019/backup/sqldeep/SqlDeep2019.bak /home/siavash/sqldeep/
 cp /var/opt/mssql/2022/backup/sqldeep/SqlDeep2022.bak /home/siavash/sqldeep/
-sudo rm /var/opt/mssql/2017/backup/sqldeep/SqlDeep2017.bak 
-sudo rm /var/opt/mssql/2019/backup/sqldeep/SqlDeep2019.bak 
-sudo rm /var/opt/mssql/2022/backup/sqldeep/SqlDeep2022.bak 
+sleep 5 & 
+PID=$! # Capture the Process ID of the background command
+echo "Background command started with PID: $PID"
+echo "Waiting for background command to complete..."
+wait $PID 
+echo "Background command finished."
+echo "Continuing with the script."
 sudo chown -R siavash /home/siavash/sqldeep/SqlDeep2017.bak
 sudo chown -R siavash /home/siavash/sqldeep/SqlDeep2019.bak
 sudo chown -R siavash /home/siavash/sqldeep/SqlDeep2022.bak
